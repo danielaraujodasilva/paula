@@ -36,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     deploy_response(['success' => false, 'error' => 'Metodo nao permitido.'], 405);
 }
 
-if (DEPLOY_WEBHOOK_SECRET === 'Paula*123' || DEPLOY_WEBHOOK_SECRET === '') {
+if (DEPLOY_WEBHOOK_SECRET === 'troque-este-segredo-no-servidor' || DEPLOY_WEBHOOK_SECRET === '') {
     deploy_log('Webhook recusado: segredo padrao nao alterado.');
     deploy_response(['success' => false, 'error' => 'Configure DEPLOY_WEBHOOK_SECRET no servidor.'], 500);
 }
