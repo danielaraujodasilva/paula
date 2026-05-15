@@ -13,7 +13,12 @@ define('UPLOAD_DIR', ROOT_PATH . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEP
 define('NODE_PATH', 'node');
 define('NODE_SCRIPT_DIR', ROOT_PATH . DIRECTORY_SEPARATOR . 'node');
 
-define('DEPLOY_WEBHOOK_SECRET', 'troque-este-segredo-no-servidor');
-define('DEPLOY_BRANCH', 'main');
-define('DEPLOY_REPO_PATH', ROOT_PATH);
-define('GIT_PATH', 'git');
+$localConfig = __DIR__ . '/local.php';
+if (is_file($localConfig)) {
+    require_once $localConfig;
+}
+
+defined('DEPLOY_WEBHOOK_SECRET') || define('DEPLOY_WEBHOOK_SECRET', 'troque-este-segredo-no-servidor');
+defined('DEPLOY_BRANCH') || define('DEPLOY_BRANCH', 'main');
+defined('DEPLOY_REPO_PATH') || define('DEPLOY_REPO_PATH', ROOT_PATH);
+defined('GIT_PATH') || define('GIT_PATH', 'git');

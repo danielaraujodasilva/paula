@@ -15,10 +15,13 @@ function deploy_log(string $message): void
 {
     $dir = ROOT_PATH . DIRECTORY_SEPARATOR . 'logs';
     if (!is_dir($dir)) {
-        mkdir($dir, 0775, true);
+        @mkdir($dir, 0775, true);
+    }
+    if (!is_dir($dir) || !is_writable($dir)) {
+        return;
     }
     $line = '[' . date('Y-m-d H:i:s') . '] ' . $message . PHP_EOL;
-    file_put_contents($dir . DIRECTORY_SEPARATOR . 'deploy.log', $line, FILE_APPEND);
+    @file_put_contents($dir . DIRECTORY_SEPARATOR . 'deploy.log', $line, FILE_APPEND);
 }
 
 function run_deploy_command(string $command): array
