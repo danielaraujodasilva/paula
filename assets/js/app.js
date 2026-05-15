@@ -42,7 +42,13 @@ document.getElementById('runSearchBtn')?.addEventListener('click', async (event)
     try {
         const data = await postJson('api/rodar_busca.php', {});
         showToast(data.message || 'Busca finalizada.');
-        setTimeout(() => window.location.reload(), 900);
+        setTimeout(() => {
+            if (window.location.pathname.endsWith('/vagas.php')) {
+                window.location.reload();
+            } else {
+                window.location.href = 'vagas.php';
+            }
+        }, 1200);
     } catch (error) {
         showToast(error.message);
     } finally {

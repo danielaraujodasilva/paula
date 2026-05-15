@@ -18,6 +18,45 @@ function parseSources(value) {
   }
 }
 
+function uniqueTerms(values) {
+  const terms = [];
+  for (const value of values.flat()) {
+    const term = String(value || '').trim();
+    if (term && !terms.some((item) => item.toLowerCase() === term.toLowerCase())) {
+      terms.push(term);
+    }
+  }
+  return terms;
+}
+
+async function buildFallbackSearches(db) {
+  const [rows] = await db.execute('SELECT * FROM curriculos WHERE ativo = 1 ORDER BY id DESC LIMIT 1');
+  if (!rows.length || !rows[0].perfil_json) return [];
+
+  let profile;
+  try {
+    profile = JSON.parse(rows[0].perfil_json);
+  } catch {
+    return [];
+  }
+
+  const terms = uniqueTerms([
+    profile.cargo_alvo || [],
+    profile.palavras_chave || [],
+    profile.habilidades || []
+  ]).slice(0, 6);
+
+  if (!terms.length) return [];
+
+  return [{
+    nome: 'Busca automatica pelo perfil ativo',
+    termos: terms.join('\n'),
+    localizacao: profile.localizacao || 'Brasil',
+    remoto: profile.aceita_remoto ? 1 : 0,
+    fontes: JSON.stringify(['Remotive', 'Arbeitnow'])
+  }];
+}
+
 async function runSource(source, term, where) {
   if (source === 'Remotive') return searchRemotive(term);
   if (source === 'Arbeitnow') return searchArbeitnow(term);
@@ -27,11 +66,15 @@ async function runSource(source, term, where) {
 
 async function main() {
   const db = pool();
-  const [searches] = await db.execute('SELECT * FROM buscas WHERE ativa = 1 ORDER BY id DESC');
+  let [searches] = await db.execute('SELECT * FROM buscas WHERE ativa = 1 ORDER BY id DESC');
   if (!searches.length) {
-    console.log('Nenhuma busca ativa encontrada.');
-    await db.end();
-    return;
+    searches = await buildFallbackSearches(db);
+    if (!searches.length) {
+      console.log('Nenhuma busca ativa encontrada e nao foi possivel montar uma busca pelo perfil ativo.');
+      await db.end();
+      return;
+    }
+    console.log('Nenhuma busca ativa encontrada. Usando busca automatica pelo perfil ativo.');
   }
 
   let inserted = 0;
