@@ -1,9 +1,13 @@
 const crypto = require('crypto');
 const { pool } = require('./lib/db');
 const { lines } = require('./lib/text');
+const { normalizeText } = require('./lib/matcher');
 const { searchRemotive } = require('./sources/remotive');
 const { searchArbeitnow } = require('./sources/arbeitnow');
 const { searchAdzuna } = require('./sources/adzuna');
+const { searchRemoteOk } = require('./sources/remoteok');
+
+const DEFAULT_SOURCES = ['Remotive', 'Arbeitnow', 'RemoteOK'];
 
 function hashJob(job) {
   return crypto.createHash('sha256').update(`${job.fonte}|${job.url}|${job.titulo}|${job.empresa}`).digest('hex');
@@ -12,9 +16,9 @@ function hashJob(job) {
 function parseSources(value) {
   try {
     const parsed = JSON.parse(value || '[]');
-    return Array.isArray(parsed) && parsed.length ? parsed : ['Remotive', 'Arbeitnow'];
+    return Array.isArray(parsed) && parsed.length ? parsed : DEFAULT_SOURCES;
   } catch {
-    return ['Remotive', 'Arbeitnow'];
+    return DEFAULT_SOURCES;
   }
 }
 
@@ -27,6 +31,45 @@ function uniqueTerms(values) {
     }
   }
   return terms;
+}
+
+function splitFilterTerms(value) {
+  return String(value || '')
+    .split(/[\n,;|]+/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function jobText(job) {
+  return normalizeText(`${job.titulo || ''} ${job.empresa || ''} ${job.localizacao || ''} ${job.descricao || ''}`);
+}
+
+function matchesSearchFilters(job, search) {
+  const text = jobText(job);
+  const required = splitFilterTerms(search.palavras_obrigatorias);
+  const forbidden = splitFilterTerms(search.palavras_proibidas);
+  const where = normalizeText(search.localizacao || '');
+  const remoteWanted = Number(search.remoto || 0) === 1;
+
+  if (required.length && !required.every((term) => text.includes(normalizeText(term)))) {
+    return false;
+  }
+
+  if (forbidden.length && forbidden.some((term) => text.includes(normalizeText(term)))) {
+    return false;
+  }
+
+  if (where && where !== 'brasil') {
+    const remoteText = text.includes('remote') || text.includes('remoto') || text.includes('anywhere') || text.includes('worldwide');
+    if (!remoteWanted && !text.includes(where)) {
+      return false;
+    }
+    if (remoteWanted && !remoteText && !text.includes(where)) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 async function buildFallbackSearches(db) {
@@ -44,7 +87,7 @@ async function buildFallbackSearches(db) {
     profile.cargo_alvo || [],
     profile.palavras_chave || [],
     profile.habilidades || []
-  ]).slice(0, 6);
+  ]).slice(0, 8);
 
   if (!terms.length) return [];
 
@@ -53,7 +96,8 @@ async function buildFallbackSearches(db) {
     termos: terms.join('\n'),
     localizacao: profile.localizacao || 'Brasil',
     remoto: profile.aceita_remoto ? 1 : 0,
-    fontes: JSON.stringify(['Remotive', 'Arbeitnow'])
+    palavras_proibidas: Array.isArray(profile.palavras_proibidas) ? profile.palavras_proibidas.join('\n') : '',
+    fontes: JSON.stringify(DEFAULT_SOURCES)
   }];
 }
 
@@ -61,6 +105,7 @@ async function runSource(source, term, where) {
   if (source === 'Remotive') return searchRemotive(term);
   if (source === 'Arbeitnow') return searchArbeitnow(term);
   if (source === 'Adzuna') return searchAdzuna(term, where);
+  if (source === 'RemoteOK') return searchRemoteOk(term);
   return [];
 }
 
@@ -78,6 +123,7 @@ async function main() {
   }
 
   let inserted = 0;
+  let ignoredByFilters = 0;
   for (const search of searches) {
     const terms = lines(search.termos);
     const sources = parseSources(search.fontes);
@@ -86,6 +132,11 @@ async function main() {
         try {
           const jobs = await runSource(source, term, search.localizacao || '');
           for (const job of jobs) {
+            if (!matchesSearchFilters(job, search)) {
+              ignoredByFilters += 1;
+              continue;
+            }
+
             const hash = hashJob(job);
             const [result] = await db.execute(
               `INSERT IGNORE INTO vagas (titulo, empresa, localizacao, salario, fonte, url, descricao, data_publicacao, hash_vaga, raw_json)
@@ -105,7 +156,7 @@ async function main() {
             );
             if (result.affectedRows) inserted += 1;
           }
-          console.log(`${source}: ${jobs.length} resultados para "${term}".`);
+          console.log(`${source}: ${jobs.length} resultados brutos para "${term}".`);
         } catch (error) {
           console.error(`${source} falhou para "${term}": ${error.message}`);
         }
@@ -113,9 +164,10 @@ async function main() {
     }
   }
 
-  await db.execute('INSERT INTO logs_execucao (tipo, mensagem) VALUES (?, ?)', ['search-jobs', `${inserted} vagas novas salvas.`]);
+  const logMessage = `${inserted} vagas novas salvas. ${ignoredByFilters} ignoradas pelos filtros.`;
+  await db.execute('INSERT INTO logs_execucao (tipo, mensagem) VALUES (?, ?)', ['search-jobs', logMessage]);
   await db.end();
-  console.log(`${inserted} vagas novas salvas.`);
+  console.log(logMessage);
 
   const { spawnSync } = require('child_process');
   const score = spawnSync(process.execPath, ['score-jobs.js'], { cwd: __dirname, stdio: 'inherit' });
