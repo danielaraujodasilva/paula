@@ -69,7 +69,7 @@ ADZUNA_COUNTRY=br
 8. Abra no navegador:
 
 ```text
-http://localhost/site/paula/public
+https://danieltatuador.com/paula/
 ```
 
 ## Fluxo de uso
@@ -231,12 +231,12 @@ git pull --ff-only origin main
 
 ## Arquivos principais
 
-- `public/index.php`: dashboard.
-- `public/curriculos.php`: upload/lista de curriculos.
-- `public/perfil.php`: edicao do perfil profissional.
-- `public/configuracoes.php`: configuracao das buscas.
-- `public/vagas.php`: filtros e tabela de vagas.
-- `public/vaga.php`: detalhe, compatibilidade e mensagem sugerida.
+- `index.php`: dashboard.
+- `curriculos.php`: upload/lista de curriculos.
+- `perfil.php`: edicao do perfil profissional.
+- `configuracoes.php`: configuracao das buscas.
+- `vagas.php`: filtros e tabela de vagas.
+- `vaga.php`: detalhe, compatibilidade e mensagem sugerida.
 - `node/extract-resume.js`: extracao de texto e perfil inicial.
 - `node/search-jobs.js`: busca Remotive, Arbeitnow e Adzuna opcional.
 - `node/score-jobs.js`: pontuacao local sem API paga.
