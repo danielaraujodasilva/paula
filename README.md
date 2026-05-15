@@ -1,6 +1,6 @@
 # Projeto Paula
 
-Primeira versao funcional de um sistema web local para enviar curriculos, extrair texto, montar um perfil profissional, buscar vagas gratuitas em APIs publicas, salvar no MySQL e calcular compatibilidade entre perfil e vaga.
+Sistema web local para enviar curriculos, extrair texto, montar um perfil profissional, buscar vagas gratuitas em APIs publicas, salvar no MySQL e calcular compatibilidade entre perfil e vaga.
 
 ## Stack
 
@@ -11,9 +11,23 @@ Primeira versao funcional de um sistema web local para enviar curriculos, extrai
 - Node.js para extracao, busca e pontuacao
 - Windows + XAMPP
 
+## Fontes de vagas integradas
+
+Fontes sem chave, gratuitas na primeira versao:
+
+- Remotive
+- Arbeitnow
+- RemoteOK
+
+Fonte opcional com cadastro gratuito/chave:
+
+- Adzuna
+
+Observacao honesta: Remotive, Arbeitnow e RemoteOK sao muito fortes para remoto/internacional. Para Brasil/Sao Paulo, use termos em portugues e ingles e configure Adzuna quando puder. Buscar direto em LinkedIn/Indeed/Gupy por robo fica para uma fase separada, porque esses sites adoram bloquear automacao como se a vaga fosse segredo militar.
+
 ## Instalacao no Windows + XAMPP
 
-1. Copie a pasta `agente-vagas` para:
+1. Copie a pasta do projeto para:
 
 ```bat
 C:\xampp\htdocs\site\paula
@@ -42,7 +56,7 @@ define('DB_HOST', '127.0.0.1');
 define('DB_NAME', 'agente_vagas');
 define('DB_USER', 'root');
 define('DB_PASS', '');
-define('BASE_URL', '/site/paula/public');
+define('BASE_URL', '/paula');
 ```
 
 6. Instale as dependencias Node:
@@ -58,7 +72,7 @@ npm install
 copy .env.example .env
 ```
 
-Adzuna e opcional. Remotive e Arbeitnow funcionam sem chave. Para usar Adzuna, preencha:
+Adzuna e opcional. Para usar Adzuna, preencha:
 
 ```env
 ADZUNA_APP_ID=
@@ -78,9 +92,42 @@ https://danieltatuador.com/paula/
 2. O PHP salva o arquivo e chama `node/extract-resume.js`.
 3. O Node extrai o texto e gera um `perfil_json` inicial por heuristicas.
 4. Acesse `Perfil` para revisar e editar manualmente.
-5. Acesse `Buscas` para configurar termos, localizacao, remoto e fontes.
+5. Acesse `Buscas` para configurar termos, localizacao, remoto, palavras obrigatorias, palavras proibidas e fontes.
 6. Clique em `Rodar busca agora` no topo do sistema.
 7. Veja as vagas em `Vagas`, filtre, abra detalhes e altere status.
+
+## Como melhorar resultado para Brasil/Sao Paulo
+
+Crie buscas com termos variados, por exemplo:
+
+```text
+assistente administrativo
+auxiliar administrativo
+atendimento ao cliente
+recepcionista
+web designer
+designer grafico
+social media
+marketing digital
+```
+
+Em localizacao, use:
+
+```text
+Brasil
+Sao Paulo
+Guarulhos
+Remote
+```
+
+Use palavras proibidas para cortar furada:
+
+```text
+porta a porta
+comissao apenas
+sem salario fixo
+vendedor externo
+```
 
 ## Busca manual
 
@@ -89,7 +136,7 @@ cd C:\xampp\htdocs\site\paula\node
 node search-jobs.js
 ```
 
-O script busca vagas novas, evita duplicadas por `hash_vaga` e chama `score-jobs.js` automaticamente.
+O script busca vagas novas, aplica filtros antes de salvar, evita duplicadas por `hash_vaga` e chama `score-jobs.js` automaticamente.
 
 ## Recalcular todas as notas
 
@@ -131,7 +178,7 @@ No servidor, o projeto precisa estar clonado por Git, nao apenas copiado por FTP
 
 ```bat
 cd /d C:\xampp\htdocs\site
-git clone https://github.com/SEU_USUARIO/paula.git paula
+git clone https://github.com/danielaraujodasilva/paula.git paula
 ```
 
 O diretorio `C:\xampp\htdocs\site\paula` precisa conter `config`, `api`, `public`, `node` e tambem a pasta `.git`.
@@ -160,12 +207,6 @@ define('DEPLOY_WEBHOOK_SECRET', 'paula-uma-frase-bem-grande-e-secreta-2026');
 
 Use esse mesmo valor no campo `Secret` do GitHub Webhook.
 
-`DEPLOY_REPO_PATH` precisa apontar para a pasta que contem `.git`. Como o servidor vai usar `C:\xampp\htdocs\site\paula`, use:
-
-```php
-define('DEPLOY_REPO_PATH', ROOT_PATH);
-```
-
 ### 3. Criar Webhook no GitHub
 
 No repositorio do GitHub:
@@ -176,10 +217,8 @@ No repositorio do GitHub:
 4. Em `Payload URL`, coloque:
 
 ```text
-https://SEU_DOMINIO.com/site/paula/api/github_webhook.php
+https://SEU_DOMINIO.com/paula/api/github_webhook.php
 ```
-
-Se for rede local ou servidor sem HTTPS publico, use a URL publica real que o GitHub consegue acessar.
 
 5. Em `Content type`, selecione:
 
@@ -196,31 +235,6 @@ Just the push event
 
 8. Deixe `Active` marcado e salve.
 
-### 4. Testar
-
-Depois de salvar, o GitHub envia um evento `ping`. Se estiver tudo certo, ele deve receber resposta `200`.
-
-Para testar deploy de verdade:
-
-```bat
-git add .
-git commit -m "Teste deploy webhook"
-git push origin main
-```
-
-No servidor, veja o log em:
-
-```bat
-C:\xampp\htdocs\site\paula\logs\deploy.log
-```
-
-Se aparecer erro de permissao, o usuario do Apache precisa ter permissao de escrita na pasta do projeto. Se aparecer erro de Git, rode manualmente no servidor:
-
-```bat
-cd /d C:\xampp\htdocs\site\paula
-git pull --ff-only origin main
-```
-
 ## Seguranca local
 
 - As queries usam prepared statements.
@@ -231,17 +245,23 @@ git pull --ff-only origin main
 
 ## Arquivos principais
 
-- `index.php`: dashboard.
-- `curriculos.php`: upload/lista de curriculos.
-- `perfil.php`: edicao do perfil profissional.
-- `configuracoes.php`: configuracao das buscas.
-- `vagas.php`: filtros e tabela de vagas.
-- `vaga.php`: detalhe, compatibilidade e mensagem sugerida.
+- `public/index.php`: dashboard.
+- `public/curriculos.php`: upload/lista de curriculos.
+- `public/perfil.php`: edicao do perfil profissional.
+- `public/configuracoes.php`: configuracao das buscas.
+- `public/vagas.php`: filtros e tabela de vagas.
+- `public/vaga.php`: detalhe, compatibilidade e mensagem sugerida.
 - `node/extract-resume.js`: extracao de texto e perfil inicial.
-- `node/search-jobs.js`: busca Remotive, Arbeitnow e Adzuna opcional.
+- `node/search-jobs.js`: busca Remotive, Arbeitnow, RemoteOK e Adzuna opcional.
 - `node/score-jobs.js`: pontuacao local sem API paga.
 - `database/schema.sql`: estrutura do banco.
 
-## Observacoes
+## Proximas melhorias planejadas
 
-Esta versao nao usa IA paga, login obrigatorio ou frameworks pesados. A pontuacao e baseada em texto normalizado, palavras-chave, habilidades, localizacao, senioridade e alertas simples.
+- Login e senha para multiusuario.
+- Fontes por pagina de carreira de empresa, como Gupy, Lever e Greenhouse.
+- Painel para cadastrar empresas alvo e procurar vagas diretamente nelas.
+- Gerador de curriculo adaptado para cada vaga.
+- Alertas por WhatsApp ou e-mail.
+
+Esta versao nao usa IA paga ou frameworks pesados. A pontuacao e baseada em texto normalizado, palavras-chave, habilidades, localizacao, senioridade e alertas simples.
