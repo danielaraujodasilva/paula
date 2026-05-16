@@ -79,6 +79,9 @@ if (!is_array($fontesSelecionadas)) { $fontesSelecionadas = ['Remotive', 'Arbeit
 <?php if (isset($_GET['excluido'])): ?><div class="alert alert-warning">Busca excluida.</div><?php endif; ?>
 <?php if (isset($_GET['status'])): ?><div class="alert alert-info">Status da busca alterado.</div><?php endif; ?>
 <div class="alert alert-info border-0">
+    <strong>Gerenciamento de buscas ativo:</strong> agora os botoes ficam na primeira coluna. Se nao aparecerem, o navegador esta vendo uma pagina velha, porque aparentemente ate tabela agora pratica ilusionismo.
+</div>
+<div class="alert alert-secondary border-0">
     <strong>Dica:</strong> para Brasil/Sao Paulo, use termos em portugues e em ingles. Exemplo: <code>designer grafico</code>, <code>web designer</code>, <code>assistente administrativo</code>. E cuidado com typo tipo <code>webdeisgner</code>, porque a API nao e mae.
 </div>
 <div class="row g-4">
@@ -112,21 +115,21 @@ if (!is_array($fontesSelecionadas)) { $fontesSelecionadas = ['Remotive', 'Arbeit
     <div class="col-lg-7">
         <div class="card"><div class="card-body">
             <h2 class="h5 mb-3">Buscas salvas</h2>
-            <div class="table-responsive"><table class="table align-middle"><thead><tr><th>Status</th><th>Nome</th><th>Local</th><th>Tipo</th><th>Termos</th><th>Fontes</th><th>Acoes</th></tr></thead><tbody>
+            <div class="table-responsive"><table class="table align-middle"><thead><tr><th>Acoes</th><th>Status</th><th>Nome</th><th>Local</th><th>Tipo</th><th>Termos</th><th>Fontes</th></tr></thead><tbody>
             <?php foreach ($buscas as $busca): ?>
                 <?php $fontesBusca = json_decode($busca['fontes'] ?: '[]', true); if (!is_array($fontesBusca)) { $fontesBusca = []; } ?>
                 <tr class="<?= (int)$busca['ativa'] ? '' : 'opacity-50' ?>">
+                    <td class="text-nowrap" style="min-width: 220px">
+                        <a class="btn btn-sm btn-primary me-1" href="configuracoes.php?editar=<?= (int)$busca['id'] ?>" title="Editar"><i class="bi bi-pencil"></i> Editar</a>
+                        <form method="post" class="d-inline"><input type="hidden" name="acao" value="toggle"><input type="hidden" name="id" value="<?= (int)$busca['id'] ?>"><button class="btn btn-sm btn-warning me-1" title="Ativar/pausar"><i class="bi bi-power"></i></button></form>
+                        <form method="post" class="d-inline" onsubmit="return confirm('Excluir esta busca? As vagas ja salvas continuam no sistema.');"><input type="hidden" name="acao" value="excluir"><input type="hidden" name="id" value="<?= (int)$busca['id'] ?>"><button class="btn btn-sm btn-danger" title="Excluir"><i class="bi bi-trash"></i></button></form>
+                    </td>
                     <td><span class="badge <?= (int)$busca['ativa'] ? 'text-bg-success' : 'text-bg-secondary' ?>"><?= (int)$busca['ativa'] ? 'Ativa' : 'Pausada' ?></span></td>
                     <td><?= e($busca['nome']) ?></td>
                     <td><?= e($busca['localizacao']) ?></td>
                     <td><?= (int)$busca['remoto'] ? 'Remoto/local' : 'Somente local' ?></td>
                     <td style="min-width:160px"><?= nl2br(e($busca['termos'])) ?></td>
                     <td><?= e(implode(', ', $fontesBusca)) ?></td>
-                    <td class="text-nowrap">
-                        <a class="btn btn-sm btn-outline-light small-action" href="configuracoes.php?editar=<?= (int)$busca['id'] ?>" title="Editar"><i class="bi bi-pencil"></i></a>
-                        <form method="post" class="d-inline"><input type="hidden" name="acao" value="toggle"><input type="hidden" name="id" value="<?= (int)$busca['id'] ?>"><button class="btn btn-sm btn-outline-warning small-action" title="Ativar/pausar"><i class="bi bi-power"></i></button></form>
-                        <form method="post" class="d-inline" onsubmit="return confirm('Excluir esta busca? As vagas ja salvas continuam no sistema.');"><input type="hidden" name="acao" value="excluir"><input type="hidden" name="id" value="<?= (int)$busca['id'] ?>"><button class="btn btn-sm btn-outline-danger small-action" title="Excluir"><i class="bi bi-trash"></i></button></form>
-                    </td>
                 </tr>
             <?php endforeach; ?>
             <?php if (!$buscas): ?><tr><td colspan="7" class="text-muted">Nenhuma busca configurada.</td></tr><?php endif; ?>
