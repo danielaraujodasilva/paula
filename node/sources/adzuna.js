@@ -1,8 +1,16 @@
 const axios = require('axios');
 require('dotenv').config();
 
+function hasAdzunaKeys() {
+  return Boolean(process.env.ADZUNA_APP_ID && process.env.ADZUNA_APP_KEY);
+}
+
 async function searchAdzuna(term, where = '') {
-  if (!process.env.ADZUNA_APP_ID || !process.env.ADZUNA_APP_KEY) return [];
+  if (!hasAdzunaKeys()) {
+    console.log('Adzuna ignorada: ADZUNA_APP_ID ou ADZUNA_APP_KEY nao configurados no .env.');
+    return [];
+  }
+
   const country = process.env.ADZUNA_COUNTRY || 'br';
   const endpoint = `https://api.adzuna.com/v1/api/jobs/${country}/search/1`;
   const response = await axios.get(endpoint, {
@@ -14,7 +22,9 @@ async function searchAdzuna(term, where = '') {
       where
     }
   });
-  return (response.data.results || []).map((job) => ({
+
+  const results = response.data.results || [];
+  return results.map((job) => ({
     titulo: job.title || '',
     empresa: job.company?.display_name || '',
     localizacao: job.location?.display_name || '',
@@ -27,4 +37,4 @@ async function searchAdzuna(term, where = '') {
   }));
 }
 
-module.exports = { searchAdzuna };
+module.exports = { searchAdzuna, hasAdzunaKeys };
