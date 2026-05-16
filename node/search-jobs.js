@@ -4,10 +4,12 @@ const { lines } = require('./lib/text');
 const { normalizeText } = require('./lib/matcher');
 const { searchRemotive } = require('./sources/remotive');
 const { searchArbeitnow } = require('./sources/arbeitnow');
-const { searchAdzuna } = require('./sources/adzuna');
+const { searchAdzuna, hasAdzunaKeys } = require('./sources/adzuna');
 const { searchRemoteOk } = require('./sources/remoteok');
 
 const DEFAULT_SOURCES = ['Remotive', 'Arbeitnow', 'RemoteOK'];
+const KNOWN_SOURCES = ['Remotive', 'Arbeitnow', 'RemoteOK', 'Adzuna'];
+const DEBUG = process.argv.includes('--debug') || process.env.DEBUG_JOBS === '1';
 
 function hashJob(job) {
   return crypto.createHash('sha256').update(`${job.fonte}|${job.url}|${job.titulo}|${job.empresa}`).digest('hex');
@@ -16,7 +18,7 @@ function hashJob(job) {
 function parseSources(value) {
   try {
     const parsed = JSON.parse(value || '[]');
-    return Array.isArray(parsed) && parsed.length ? parsed : DEFAULT_SOURCES;
+    return Array.isArray(parsed) && parsed.length ? parsed.filter((source) => KNOWN_SOURCES.includes(source)) : DEFAULT_SOURCES;
   } catch {
     return DEFAULT_SOURCES;
   }
@@ -122,15 +124,24 @@ async function main() {
     console.log('Nenhuma busca ativa encontrada. Usando busca automatica pelo perfil ativo.');
   }
 
+  console.log(`Buscas ativas: ${searches.length}. Adzuna keys: ${hasAdzunaKeys() ? 'configuradas' : 'ausentes'}.`);
+
   let inserted = 0;
   let ignoredByFilters = 0;
   for (const search of searches) {
     const terms = lines(search.termos);
     const sources = parseSources(search.fontes);
+    console.log(`Busca "${search.nome || search.id}": fontes ${sources.join(', ')} | termos: ${terms.join(', ')}`);
+
+    if (!sources.includes('Adzuna') && hasAdzunaKeys()) {
+      console.log(`Aviso: Adzuna tem chave configurada, mas nao esta marcada na busca "${search.nome || search.id}".`);
+    }
+
     for (const term of terms) {
       for (const source of sources) {
         try {
           const jobs = await runSource(source, term, search.localizacao || '');
+          let savedFromSource = 0;
           for (const job of jobs) {
             if (!matchesSearchFilters(job, search)) {
               ignoredByFilters += 1;
@@ -154,11 +165,18 @@ async function main() {
                 JSON.stringify(job.raw_json || job)
               ]
             );
-            if (result.affectedRows) inserted += 1;
+            if (result.affectedRows) {
+              inserted += 1;
+              savedFromSource += 1;
+            }
           }
-          console.log(`${source}: ${jobs.length} resultados brutos para "${term}".`);
+          console.log(`${source}: ${jobs.length} resultados brutos para "${term}". ${savedFromSource} novas vagas salvas.`);
+          if (DEBUG && source === 'Adzuna' && jobs.length === 0) {
+            console.log(`Debug Adzuna: sem resultados para termo="${term}" local="${search.localizacao || ''}".`);
+          }
         } catch (error) {
-          console.error(`${source} falhou para "${term}": ${error.message}`);
+          const extra = error.response?.data ? ` | resposta: ${JSON.stringify(error.response.data).slice(0, 500)}` : '';
+          console.error(`${source} falhou para "${term}": ${error.message}${extra}`);
         }
       }
     }
