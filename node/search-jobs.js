@@ -14,6 +14,8 @@ const { searchProgramaThor } = require('./sources/programathor');
 const { searchNetvagas } = require('./sources/netvagas');
 const { searchTrabalhaBrasil } = require('./sources/trabalhabrasil');
 const { searchExperimentalRss } = require('./sources/experimental-rss');
+const { searchApinfo } = require('./sources/apinfo');
+const { searchNerdin } = require('./sources/nerdin');
 
 const DEFAULT_SOURCES = [
   'Remotar',
@@ -28,6 +30,8 @@ const DEFAULT_SOURCES = [
   'Himalayas'
 ];
 const EXPERIMENTAL_SOURCES = [
+  'APinfo Experimental',
+  'Nerdin Experimental',
   'TrabalhaBrasil Experimental',
   'RSS Experimental'
 ];
@@ -137,6 +141,8 @@ async function runSource(source, term, where) {
   if (source === 'Remotar') return searchRemotar(term, where);
   if (source === 'ProgramaThor') return searchProgramaThor(term, where);
   if (source === 'Netvagas') return searchNetvagas(term, where);
+  if (source === 'APinfo Experimental') return searchApinfo(term, where);
+  if (source === 'Nerdin Experimental') return searchNerdin(term, where);
   if (source === 'TrabalhaBrasil Experimental') return searchTrabalhaBrasil(term, where);
   if (source === 'RSS Experimental') return searchExperimentalRss(term, where);
   return [];

@@ -16,6 +16,8 @@ $fontesDisponiveis = [
     'Himalayas' => 'API publica gratuita de vagas remotas internacionais.'
 ];
 $fontesExperimentais = [
+    'APinfo Experimental' => 'Vagas recentes da APinfo filtradas por termo. Evita a busca direta porque o site limita consultas.',
+    'Nerdin Experimental' => 'Scraping de vagas de TI do Nerdin com dados estruturados quando disponiveis.',
     'TrabalhaBrasil Experimental' => 'Scraping de pagina publica. Pode quebrar se o site mudar layout.',
     'RSS Experimental' => 'Feeds RSS configurados no sistema. Cobertura irregular, mas pode achar oportunidades locais.'
 ];

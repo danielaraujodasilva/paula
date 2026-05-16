@@ -92,6 +92,8 @@ Sem `GUPY_TOKEN`, a fonte Gupy aparece como ignorada no log da busca. Se qualque
 Fontes experimentais podem ser ativadas por busca na tela `Buscas`:
 
 - TrabalhaBrasil Experimental: scraping de listagem publica.
+- APinfo Experimental: vagas recentes da APinfo filtradas por termo.
+- Nerdin Experimental: scraping de vagas de TI com dados estruturados quando disponiveis.
 - RSS Experimental: feeds RSS, incluindo o feed padrao do BNE e URLs extras em `PAULA_EXPERIMENTAL_FEEDS`.
 
 Por serem experimentais, elas ficam desligadas por padrao. Se falharem, a busca continua e mostra o alerta no retorno.
