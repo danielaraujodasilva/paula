@@ -20,13 +20,16 @@ Fontes sem chave, gratuitas na primeira versao:
 - RemoteOK
 - Codante
 - Himalayas
+- Remotar
+- ProgramaThor
+- Netvagas
 
 Fonte opcional com cadastro gratuito/chave:
 
 - Adzuna
 - Gupy
 
-Observacao honesta: Remotive, Arbeitnow, RemoteOK e Himalayas sao muito fortes para remoto/internacional. Codante ajuda em tech no Brasil. Para Brasil/Sao Paulo, use termos em portugues e ingles e configure Adzuna e Gupy quando puder. Buscar direto em LinkedIn/Indeed por robo fica fora por enquanto, porque esses sites bloqueiam automacao e scraping com frequencia.
+Observacao honesta: Remotar, ProgramaThor e Netvagas melhoram bastante a cobertura brasileira. Remotive, Arbeitnow, RemoteOK e Himalayas continuam fortes para remoto/internacional. Codante ajuda em tech no Brasil. Para Brasil/Sao Paulo, use termos em portugues e ingles e configure Adzuna e Gupy quando puder. Buscar direto em LinkedIn/Indeed por robo fica fora por enquanto, porque esses sites bloqueiam automacao e scraping com frequencia.
 
 ## Instalacao no Windows + XAMPP
 

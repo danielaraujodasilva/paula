@@ -4,13 +4,16 @@ require_once __DIR__ . '/../includes/header.php';
 
 $userId = current_user_id();
 $fontesDisponiveis = [
+    'Remotar' => 'Vagas remotas do Brasil, com API publica propria.',
+    'ProgramaThor' => 'Vagas brasileiras para tecnologia e desenvolvimento.',
+    'Netvagas' => 'Fonte brasileira generalista, com vagas de varias areas.',
+    'Gupy' => 'Fonte brasileira ampla; usa token publico da Gupy quando configurado.',
+    'Adzuna' => 'Opcional com chave gratis, melhor para Brasil quando configurada.',
+    'Codante' => 'API brasileira gratuita para vagas de tecnologia.',
     'Remotive' => 'Vagas remotas internacionais, sem chave.',
     'Arbeitnow' => 'Vagas globais/tech, sem chave.',
     'RemoteOK' => 'Vagas remotas, sem chave.',
-    'Adzuna' => 'Opcional com chave gratis, melhor para Brasil quando configurada.',
-    'Gupy' => 'Fonte brasileira ampla; usa token publico da Gupy quando configurado.',
-    'Codante' => 'API brasileira gratuita para vagas de tecnologia.',
-    'Himalayas' => 'API publica gratuita de vagas remotas.'
+    'Himalayas' => 'API publica gratuita de vagas remotas internacionais.'
 ];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {

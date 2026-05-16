@@ -9,8 +9,22 @@ const { searchRemoteOk } = require('./sources/remoteok');
 const { searchGupy, hasGupyToken } = require('./sources/gupy');
 const { searchCodante } = require('./sources/codante');
 const { searchHimalayas } = require('./sources/himalayas');
+const { searchRemotar } = require('./sources/remotar');
+const { searchProgramaThor } = require('./sources/programathor');
+const { searchNetvagas } = require('./sources/netvagas');
 
-const DEFAULT_SOURCES = ['Remotive', 'Arbeitnow', 'RemoteOK', 'Adzuna', 'Gupy', 'Codante', 'Himalayas'];
+const DEFAULT_SOURCES = [
+  'Remotar',
+  'ProgramaThor',
+  'Netvagas',
+  'Gupy',
+  'Adzuna',
+  'Codante',
+  'Remotive',
+  'Arbeitnow',
+  'RemoteOK',
+  'Himalayas'
+];
 const DEBUG = process.argv.includes('--debug') || process.env.DEBUG_JOBS === '1';
 const userArg = process.argv.find((arg) => arg.startsWith('--user='));
 const USER_ID = userArg ? Number(userArg.split('=')[1]) : Number(process.env.PAULA_USER_ID || 0);
@@ -111,6 +125,9 @@ async function runSource(source, term, where) {
   if (source === 'Gupy') return searchGupy(term, where);
   if (source === 'Codante') return searchCodante(term);
   if (source === 'Himalayas') return searchHimalayas(term, where);
+  if (source === 'Remotar') return searchRemotar(term, where);
+  if (source === 'ProgramaThor') return searchProgramaThor(term, where);
+  if (source === 'Netvagas') return searchNetvagas(term, where);
   return [];
 }
 
