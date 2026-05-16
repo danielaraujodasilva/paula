@@ -15,6 +15,10 @@ $fontesDisponiveis = [
     'RemoteOK' => 'Vagas remotas, sem chave.',
     'Himalayas' => 'API publica gratuita de vagas remotas internacionais.'
 ];
+$fontesExperimentais = [
+    'TrabalhaBrasil Experimental' => 'Scraping de pagina publica. Pode quebrar se o site mudar layout.',
+    'RSS Experimental' => 'Feeds RSS configurados no sistema. Cobertura irregular, mas pode achar oportunidades locais.'
+];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $acao = $_POST['acao'] ?? 'criar';
@@ -45,16 +49,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_POST['palavras_obrigatorias'] ?? '',
         $_POST['palavras_proibidas'] ?? '',
         json_encode($fontes, JSON_UNESCAPED_UNICODE),
+        !empty($_POST['fontes_experimentais']) ? 1 : 0,
     ];
 
     if ($acao === 'editar' && $id > 0) {
-        $stmt = $pdo->prepare('UPDATE buscas SET nome = ?, termos = ?, localizacao = ?, remoto = ?, salario_minimo = ?, palavras_obrigatorias = ?, palavras_proibidas = ?, fontes = ? WHERE id = ? AND user_id = ?');
+        $stmt = $pdo->prepare('UPDATE buscas SET nome = ?, termos = ?, localizacao = ?, remoto = ?, salario_minimo = ?, palavras_obrigatorias = ?, palavras_proibidas = ?, fontes = ?, fontes_experimentais = ? WHERE id = ? AND user_id = ?');
         $stmt->execute([...$payload, $id, $userId]);
         header('Location: configuracoes.php?editado=1');
         exit;
     }
 
-    $stmt = $pdo->prepare('INSERT INTO buscas (user_id, curriculo_id, nome, termos, localizacao, remoto, salario_minimo, palavras_obrigatorias, palavras_proibidas, fontes, ativa) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)');
+    $stmt = $pdo->prepare('INSERT INTO buscas (user_id, curriculo_id, nome, termos, localizacao, remoto, salario_minimo, palavras_obrigatorias, palavras_proibidas, fontes, fontes_experimentais, ativa) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)');
     $stmt->execute([
         $userId,
         $active['id'] ?? null,
@@ -80,12 +85,6 @@ $buscas = $stmt->fetchAll();
 <?php if (isset($_GET['editado'])): ?><div class="alert alert-success">Busca atualizada.</div><?php endif; ?>
 <?php if (isset($_GET['excluido'])): ?><div class="alert alert-warning">Busca excluida.</div><?php endif; ?>
 <?php if (isset($_GET['status'])): ?><div class="alert alert-info">Status da busca alterado.</div><?php endif; ?>
-<div class="alert alert-info border-0">
-    <strong>Gerenciamento de buscas ativo:</strong> agora os botoes ficam na primeira coluna. Se nao aparecerem, o navegador esta vendo uma pagina velha, porque aparentemente ate tabela agora pratica ilusionismo.
-</div>
-<div class="alert alert-secondary border-0">
-    <strong>Dica:</strong> para Brasil/Sao Paulo, use termos em portugues e em ingles. Exemplo: <code>designer grafico</code>, <code>web designer</code>, <code>assistente administrativo</code>. E cuidado com typo tipo <code>webdeisgner</code>, porque a API nao e mae.
-</div>
 <div class="row g-4">
     <div class="col-lg-5">
         <form class="card" method="post"><div class="card-body">
@@ -108,13 +107,23 @@ $buscas = $stmt->fetchAll();
                     <div class="source-row mb-2"><strong><?= e($fonte) ?></strong><br><small class="text-muted"><?= e($descricao) ?></small></div>
                 <?php endforeach; ?>
             </div>
+            <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" role="switch" id="fontesExperimentais" name="fontes_experimentais" value="1" <?= !empty($editBusca['fontes_experimentais']) ? 'checked' : '' ?>>
+                <label class="form-check-label" for="fontesExperimentais"><strong>Ativar fontes experimentais</strong><br><small class="text-muted">Inclui scraping e RSS. Se alguma fonte falhar, a busca mostra o alerta.</small></label>
+            </div>
+            <div class="mb-3">
+                <label class="form-label d-block">Fontes experimentais disponiveis</label>
+                <?php foreach ($fontesExperimentais as $fonte => $descricao): ?>
+                    <div class="source-row mb-2"><strong><?= e($fonte) ?></strong><br><small class="text-muted"><?= e($descricao) ?></small></div>
+                <?php endforeach; ?>
+            </div>
             <button class="btn btn-accent" type="submit"><i class="bi bi-save"></i> <?= $editBusca ? 'Salvar alteracoes' : 'Salvar busca' ?></button>
         </div></form>
     </div>
     <div class="col-lg-7">
         <div class="card"><div class="card-body">
             <h2 class="h5 mb-3">Buscas salvas</h2>
-            <div class="table-responsive"><table class="table align-middle"><thead><tr><th>Acoes</th><th>Status</th><th>Nome</th><th>Local</th><th>Tipo</th><th>Termos</th><th>Fontes</th></tr></thead><tbody>
+            <div class="table-responsive"><table class="table align-middle"><thead><tr><th>Acoes</th><th>Status</th><th>Nome</th><th>Local</th><th>Tipo</th><th>Termos</th><th>Fontes</th><th>Experimental</th></tr></thead><tbody>
             <?php foreach ($buscas as $busca): ?>
                 <?php $fontesBusca = json_decode($busca['fontes'] ?: '[]', true); if (!is_array($fontesBusca)) { $fontesBusca = []; } ?>
                 <tr class="<?= (int)$busca['ativa'] ? '' : 'opacity-50' ?>">
@@ -129,9 +138,10 @@ $buscas = $stmt->fetchAll();
                     <td><?= (int)$busca['remoto'] ? 'Remoto/local' : 'Somente local' ?></td>
                     <td style="min-width:160px"><?= nl2br(e($busca['termos'])) ?></td>
                     <td><?= e(implode(', ', $fontesBusca)) ?></td>
+                    <td><span class="badge <?= !empty($busca['fontes_experimentais']) ? 'text-bg-warning' : 'text-bg-secondary' ?>"><?= !empty($busca['fontes_experimentais']) ? 'Sim' : 'Nao' ?></span></td>
                 </tr>
             <?php endforeach; ?>
-            <?php if (!$buscas): ?><tr><td colspan="7" class="text-muted">Nenhuma busca configurada.</td></tr><?php endif; ?>
+            <?php if (!$buscas): ?><tr><td colspan="8" class="text-muted">Nenhuma busca configurada.</td></tr><?php endif; ?>
             </tbody></table></div>
         </div></div>
     </div>

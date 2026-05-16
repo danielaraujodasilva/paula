@@ -89,6 +89,13 @@ GUPY_TOKEN=
 
 Sem `GUPY_TOKEN`, a fonte Gupy aparece como ignorada no log da busca. Se qualquer fonte falhar durante a pesquisa, a tela mostra o alerta retornado pelo buscador.
 
+Fontes experimentais podem ser ativadas por busca na tela `Buscas`:
+
+- TrabalhaBrasil Experimental: scraping de listagem publica.
+- RSS Experimental: feeds RSS, incluindo o feed padrao do BNE e URLs extras em `PAULA_EXPERIMENTAL_FEEDS`.
+
+Por serem experimentais, elas ficam desligadas por padrao. Se falharem, a busca continua e mostra o alerta no retorno.
+
 8. Abra no navegador:
 
 ```text
@@ -101,7 +108,7 @@ https://danieltatuador.com/paula/
 2. O PHP salva o arquivo e chama `node/extract-resume.js`.
 3. O Node extrai o texto e gera um `perfil_json` inicial por heuristicas.
 4. Acesse `Perfil` para revisar e editar manualmente.
-5. Acesse `Buscas` para configurar termos, localizacao, remoto, palavras obrigatorias e palavras proibidas. As fontes gratuitas configuradas rodam sempre juntas.
+5. Acesse `Buscas` para configurar termos, localizacao, remoto, palavras obrigatorias e palavras proibidas. As fontes gratuitas configuradas rodam sempre juntas. Fontes experimentais podem ser ligadas por busca.
 6. Clique em `Rodar busca agora` no topo do sistema.
 7. Veja as vagas em `Vagas`, filtre, abra detalhes e altere status.
 

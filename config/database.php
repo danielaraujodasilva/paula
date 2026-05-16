@@ -28,6 +28,12 @@ try {
         }
     }
 
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'buscas' AND COLUMN_NAME = 'fontes_experimentais'");
+    $stmt->execute();
+    if ((int)$stmt->fetchColumn() === 0) {
+        $pdo->exec('ALTER TABLE buscas ADD COLUMN fontes_experimentais TINYINT DEFAULT 0 AFTER fontes');
+    }
+
     $stmt = $pdo->prepare("SELECT COUNT(*) FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'vagas' AND INDEX_NAME = 'hash_vaga'");
     $stmt->execute();
     if ((int)$stmt->fetchColumn() > 0) {

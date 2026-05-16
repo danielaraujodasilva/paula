@@ -35,6 +35,7 @@ CREATE TABLE IF NOT EXISTS buscas (
   palavras_obrigatorias LONGTEXT NULL,
   palavras_proibidas LONGTEXT NULL,
   fontes LONGTEXT NULL,
+  fontes_experimentais TINYINT DEFAULT 0,
   ativa TINYINT DEFAULT 1,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

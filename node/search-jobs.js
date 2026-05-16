@@ -12,6 +12,8 @@ const { searchHimalayas } = require('./sources/himalayas');
 const { searchRemotar } = require('./sources/remotar');
 const { searchProgramaThor } = require('./sources/programathor');
 const { searchNetvagas } = require('./sources/netvagas');
+const { searchTrabalhaBrasil } = require('./sources/trabalhabrasil');
+const { searchExperimentalRss } = require('./sources/experimental-rss');
 
 const DEFAULT_SOURCES = [
   'Remotar',
@@ -25,6 +27,10 @@ const DEFAULT_SOURCES = [
   'RemoteOK',
   'Himalayas'
 ];
+const EXPERIMENTAL_SOURCES = [
+  'TrabalhaBrasil Experimental',
+  'RSS Experimental'
+];
 const DEBUG = process.argv.includes('--debug') || process.env.DEBUG_JOBS === '1';
 const userArg = process.argv.find((arg) => arg.startsWith('--user='));
 const USER_ID = userArg ? Number(userArg.split('=')[1]) : Number(process.env.PAULA_USER_ID || 0);
@@ -33,8 +39,10 @@ function hashJob(job) {
   return crypto.createHash('sha256').update(`${job.fonte}|${job.url}|${job.titulo}|${job.empresa}`).digest('hex');
 }
 
-function parseSources() {
-  return DEFAULT_SOURCES;
+function parseSources(search) {
+  return Number(search.fontes_experimentais || 0) === 1
+    ? [...DEFAULT_SOURCES, ...EXPERIMENTAL_SOURCES]
+    : DEFAULT_SOURCES;
 }
 
 function uniqueTerms(values) {
@@ -113,6 +121,7 @@ async function buildFallbackSearches(db) {
     remoto: profile.aceita_remoto ? 1 : 0,
     palavras_proibidas: Array.isArray(profile.palavras_proibidas) ? profile.palavras_proibidas.join('\n') : '',
     fontes: JSON.stringify(DEFAULT_SOURCES),
+    fontes_experimentais: 0,
     user_id: USER_ID
   }];
 }
@@ -128,6 +137,8 @@ async function runSource(source, term, where) {
   if (source === 'Remotar') return searchRemotar(term, where);
   if (source === 'ProgramaThor') return searchProgramaThor(term, where);
   if (source === 'Netvagas') return searchNetvagas(term, where);
+  if (source === 'TrabalhaBrasil Experimental') return searchTrabalhaBrasil(term, where);
+  if (source === 'RSS Experimental') return searchExperimentalRss(term, where);
   return [];
 }
 
@@ -154,7 +165,7 @@ async function main() {
   const failures = [];
   for (const search of searches) {
     const terms = lines(search.termos);
-    const sources = parseSources(search.fontes);
+    const sources = parseSources(search);
     console.log(`Busca "${search.nome || search.id}": fontes ${sources.join(', ')} | termos: ${terms.join(', ')}`);
 
     for (const term of terms) {
