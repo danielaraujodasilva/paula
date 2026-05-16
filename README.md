@@ -18,12 +18,15 @@ Fontes sem chave, gratuitas na primeira versao:
 - Remotive
 - Arbeitnow
 - RemoteOK
+- Codante
+- Himalayas
 
 Fonte opcional com cadastro gratuito/chave:
 
 - Adzuna
+- Gupy
 
-Observacao honesta: Remotive, Arbeitnow e RemoteOK sao muito fortes para remoto/internacional. Para Brasil/Sao Paulo, use termos em portugues e ingles e configure Adzuna quando puder. Buscar direto em LinkedIn/Indeed/Gupy por robo fica para uma fase separada, porque esses sites adoram bloquear automacao como se a vaga fosse segredo militar.
+Observacao honesta: Remotive, Arbeitnow, RemoteOK e Himalayas sao muito fortes para remoto/internacional. Codante ajuda em tech no Brasil. Para Brasil/Sao Paulo, use termos em portugues e ingles e configure Adzuna e Gupy quando puder. Buscar direto em LinkedIn/Indeed por robo fica fora por enquanto, porque esses sites bloqueiam automacao e scraping com frequencia.
 
 ## Instalacao no Windows + XAMPP
 
@@ -78,7 +81,10 @@ Adzuna e opcional. Para usar Adzuna, preencha:
 ADZUNA_APP_ID=
 ADZUNA_APP_KEY=
 ADZUNA_COUNTRY=br
+GUPY_TOKEN=
 ```
+
+Sem `GUPY_TOKEN`, a fonte Gupy aparece como ignorada no log da busca. Se qualquer fonte falhar durante a pesquisa, a tela mostra o alerta retornado pelo buscador.
 
 8. Abra no navegador:
 
@@ -92,7 +98,7 @@ https://danieltatuador.com/paula/
 2. O PHP salva o arquivo e chama `node/extract-resume.js`.
 3. O Node extrai o texto e gera um `perfil_json` inicial por heuristicas.
 4. Acesse `Perfil` para revisar e editar manualmente.
-5. Acesse `Buscas` para configurar termos, localizacao, remoto, palavras obrigatorias, palavras proibidas e fontes.
+5. Acesse `Buscas` para configurar termos, localizacao, remoto, palavras obrigatorias e palavras proibidas. As fontes gratuitas configuradas rodam sempre juntas.
 6. Clique em `Rodar busca agora` no topo do sistema.
 7. Veja as vagas em `Vagas`, filtre, abra detalhes e altere status.
 
@@ -258,8 +264,7 @@ Just the push event
 
 ## Proximas melhorias planejadas
 
-- Login e senha para multiusuario.
-- Fontes por pagina de carreira de empresa, como Gupy, Lever e Greenhouse.
+- Fontes por pagina de carreira de empresa, como Lever e Greenhouse.
 - Painel para cadastrar empresas alvo e procurar vagas diretamente nelas.
 - Gerador de curriculo adaptado para cada vaga.
 - Alertas por WhatsApp ou e-mail.

@@ -6,22 +6,21 @@ const { searchRemotive } = require('./sources/remotive');
 const { searchArbeitnow } = require('./sources/arbeitnow');
 const { searchAdzuna, hasAdzunaKeys } = require('./sources/adzuna');
 const { searchRemoteOk } = require('./sources/remoteok');
+const { searchGupy, hasGupyToken } = require('./sources/gupy');
+const { searchCodante } = require('./sources/codante');
+const { searchHimalayas } = require('./sources/himalayas');
 
-const DEFAULT_SOURCES = ['Remotive', 'Arbeitnow', 'RemoteOK'];
-const KNOWN_SOURCES = ['Remotive', 'Arbeitnow', 'RemoteOK', 'Adzuna'];
+const DEFAULT_SOURCES = ['Remotive', 'Arbeitnow', 'RemoteOK', 'Adzuna', 'Gupy', 'Codante', 'Himalayas'];
 const DEBUG = process.argv.includes('--debug') || process.env.DEBUG_JOBS === '1';
+const userArg = process.argv.find((arg) => arg.startsWith('--user='));
+const USER_ID = userArg ? Number(userArg.split('=')[1]) : Number(process.env.PAULA_USER_ID || 0);
 
 function hashJob(job) {
   return crypto.createHash('sha256').update(`${job.fonte}|${job.url}|${job.titulo}|${job.empresa}`).digest('hex');
 }
 
-function parseSources(value) {
-  try {
-    const parsed = JSON.parse(value || '[]');
-    return Array.isArray(parsed) && parsed.length ? parsed.filter((source) => KNOWN_SOURCES.includes(source)) : DEFAULT_SOURCES;
-  } catch {
-    return DEFAULT_SOURCES;
-  }
+function parseSources() {
+  return DEFAULT_SOURCES;
 }
 
 function uniqueTerms(values) {
@@ -75,7 +74,7 @@ function matchesSearchFilters(job, search) {
 }
 
 async function buildFallbackSearches(db) {
-  const [rows] = await db.execute('SELECT * FROM curriculos WHERE ativo = 1 ORDER BY id DESC LIMIT 1');
+  const [rows] = await db.execute('SELECT * FROM curriculos WHERE ativo = 1 AND user_id = ? ORDER BY id DESC LIMIT 1', [USER_ID]);
   if (!rows.length || !rows[0].perfil_json) return [];
 
   let profile;
@@ -99,7 +98,8 @@ async function buildFallbackSearches(db) {
     localizacao: profile.localizacao || 'Brasil',
     remoto: profile.aceita_remoto ? 1 : 0,
     palavras_proibidas: Array.isArray(profile.palavras_proibidas) ? profile.palavras_proibidas.join('\n') : '',
-    fontes: JSON.stringify(DEFAULT_SOURCES)
+    fontes: JSON.stringify(DEFAULT_SOURCES),
+    user_id: USER_ID
   }];
 }
 
@@ -108,12 +108,18 @@ async function runSource(source, term, where) {
   if (source === 'Arbeitnow') return searchArbeitnow(term);
   if (source === 'Adzuna') return searchAdzuna(term, where);
   if (source === 'RemoteOK') return searchRemoteOk(term);
+  if (source === 'Gupy') return searchGupy(term, where);
+  if (source === 'Codante') return searchCodante(term);
+  if (source === 'Himalayas') return searchHimalayas(term, where);
   return [];
 }
 
 async function main() {
+  if (!USER_ID) {
+    throw new Error('Informe o usuario com --user=ID.');
+  }
   const db = pool();
-  let [searches] = await db.execute('SELECT * FROM buscas WHERE ativa = 1 ORDER BY id DESC');
+  let [searches] = await db.execute('SELECT * FROM buscas WHERE ativa = 1 AND user_id = ? ORDER BY id DESC', [USER_ID]);
   if (!searches.length) {
     searches = await buildFallbackSearches(db);
     if (!searches.length) {
@@ -124,18 +130,15 @@ async function main() {
     console.log('Nenhuma busca ativa encontrada. Usando busca automatica pelo perfil ativo.');
   }
 
-  console.log(`Buscas ativas: ${searches.length}. Adzuna keys: ${hasAdzunaKeys() ? 'configuradas' : 'ausentes'}.`);
+  console.log(`Buscas ativas: ${searches.length}. Adzuna keys: ${hasAdzunaKeys() ? 'configuradas' : 'ausentes'}. Gupy token: ${hasGupyToken() ? 'configurado' : 'ausente'}.`);
 
   let inserted = 0;
   let ignoredByFilters = 0;
+  const failures = [];
   for (const search of searches) {
     const terms = lines(search.termos);
     const sources = parseSources(search.fontes);
     console.log(`Busca "${search.nome || search.id}": fontes ${sources.join(', ')} | termos: ${terms.join(', ')}`);
-
-    if (!sources.includes('Adzuna') && hasAdzunaKeys()) {
-      console.log(`Aviso: Adzuna tem chave configurada, mas nao esta marcada na busca "${search.nome || search.id}".`);
-    }
 
     for (const term of terms) {
       for (const source of sources) {
@@ -150,9 +153,10 @@ async function main() {
 
             const hash = hashJob(job);
             const [result] = await db.execute(
-              `INSERT IGNORE INTO vagas (titulo, empresa, localizacao, salario, fonte, url, descricao, data_publicacao, hash_vaga, raw_json)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+              `INSERT IGNORE INTO vagas (user_id, titulo, empresa, localizacao, salario, fonte, url, descricao, data_publicacao, hash_vaga, raw_json)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
               [
+                USER_ID,
                 job.titulo || '',
                 job.empresa || '',
                 job.localizacao || '',
@@ -176,19 +180,25 @@ async function main() {
           }
         } catch (error) {
           const extra = error.response?.data ? ` | resposta: ${JSON.stringify(error.response.data).slice(0, 500)}` : '';
-          console.error(`${source} falhou para "${term}": ${error.message}${extra}`);
+          const warning = `${source} falhou para "${term}": ${error.message}${extra}`;
+          failures.push(warning);
+          console.error(`ALERTA: ${warning}`);
         }
       }
     }
   }
 
-  const logMessage = `${inserted} vagas novas salvas. ${ignoredByFilters} ignoradas pelos filtros.`;
-  await db.execute('INSERT INTO logs_execucao (tipo, mensagem) VALUES (?, ?)', ['search-jobs', logMessage]);
+  const logMessage = `${inserted} vagas novas salvas. ${ignoredByFilters} ignoradas pelos filtros.${failures.length ? ` Alertas: ${failures.length} fonte(s)/termo(s) falharam.` : ''}`;
+  await db.execute('INSERT INTO logs_execucao (user_id, tipo, mensagem) VALUES (?, ?, ?)', [USER_ID, 'search-jobs', logMessage]);
   await db.end();
   console.log(logMessage);
+  if (failures.length) {
+    console.log('Alertas de fontes:');
+    failures.forEach((failure) => console.log(`- ${failure}`));
+  }
 
   const { spawnSync } = require('child_process');
-  const score = spawnSync(process.execPath, ['score-jobs.js'], { cwd: __dirname, stdio: 'inherit' });
+  const score = spawnSync(process.execPath, ['score-jobs.js', `--user=${USER_ID}`], { cwd: __dirname, stdio: 'inherit' });
   if (score.status !== 0) process.exit(score.status);
 }
 

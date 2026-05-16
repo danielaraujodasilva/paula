@@ -2,10 +2,11 @@
 $pageTitle = 'Detalhe da vaga';
 require_once __DIR__ . '/../includes/header.php';
 
-$stmt = $pdo->prepare('SELECT * FROM vagas WHERE id = ?');
-$stmt->execute([(int)($_GET['id'] ?? 0)]);
+$userId = current_user_id();
+$stmt = $pdo->prepare('SELECT * FROM vagas WHERE id = ? AND user_id = ?');
+$stmt->execute([(int)($_GET['id'] ?? 0), $userId]);
 $vaga = $stmt->fetch();
-$curriculo = active_curriculo($pdo);
+$curriculo = active_curriculo($pdo, $userId);
 $profile = $curriculo && $curriculo['perfil_json'] ? json_decode($curriculo['perfil_json'], true) : [];
 $skills = array_slice($profile['habilidades'] ?? [], 0, 4);
 $message = 'Ola, tudo bem? Me interessei pela vaga de ' . ($vaga['titulo'] ?? '') . '. Tenho experiencia com ' . implode(', ', $skills) . ' e acredito que meu perfil combina com a oportunidade. Segue meu curriculo para avaliacao. Obrigado.';

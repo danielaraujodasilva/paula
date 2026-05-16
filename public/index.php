@@ -2,13 +2,28 @@
 $pageTitle = 'Dashboard';
 require_once __DIR__ . '/../includes/header.php';
 
+$userId = current_user_id();
 $stats = [
-    'curriculos' => (int)$pdo->query('SELECT COUNT(*) FROM curriculos')->fetchColumn(),
-    'vagas' => (int)$pdo->query('SELECT COUNT(*) FROM vagas')->fetchColumn(),
-    'interessantes' => (int)$pdo->query("SELECT COUNT(*) FROM vagas WHERE status = 'interessante'")->fetchColumn(),
-    'media' => (int)$pdo->query('SELECT COALESCE(AVG(nota_compatibilidade), 0) FROM vagas')->fetchColumn(),
+    'curriculos' => 0,
+    'vagas' => 0,
+    'interessantes' => 0,
+    'media' => 0,
 ];
-$ultimas = $pdo->query('SELECT * FROM vagas ORDER BY id DESC LIMIT 8')->fetchAll();
+$stmt = $pdo->prepare('SELECT COUNT(*) FROM curriculos WHERE user_id = ?');
+$stmt->execute([$userId]);
+$stats['curriculos'] = (int)$stmt->fetchColumn();
+$stmt = $pdo->prepare('SELECT COUNT(*) FROM vagas WHERE user_id = ?');
+$stmt->execute([$userId]);
+$stats['vagas'] = (int)$stmt->fetchColumn();
+$stmt = $pdo->prepare("SELECT COUNT(*) FROM vagas WHERE user_id = ? AND status = 'interessante'");
+$stmt->execute([$userId]);
+$stats['interessantes'] = (int)$stmt->fetchColumn();
+$stmt = $pdo->prepare('SELECT COALESCE(AVG(nota_compatibilidade), 0) FROM vagas WHERE user_id = ?');
+$stmt->execute([$userId]);
+$stats['media'] = (int)$stmt->fetchColumn();
+$stmt = $pdo->prepare('SELECT * FROM vagas WHERE user_id = ? ORDER BY id DESC LIMIT 8');
+$stmt->execute([$userId]);
+$ultimas = $stmt->fetchAll();
 ?>
 <div class="row g-3 mb-4">
     <div class="col-md-3"><div class="card stat-card"><div class="card-body"><div class="text-muted">Curriculos</div><div class="stat-value"><?= $stats['curriculos'] ?></div></div></div></div>

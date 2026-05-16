@@ -2,6 +2,8 @@
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/helpers.php';
 $pageTitle = $pageTitle ?? 'Projeto Paula';
+require_login();
+$isAuthPage = is_auth_page();
 ?>
 <!doctype html>
 <html lang="pt-BR">
@@ -14,9 +16,10 @@ $pageTitle = $pageTitle ?? 'Projeto Paula';
     <link href="<?= url('assets/css/style.css') ?>" rel="stylesheet">
 </head>
 <body>
-<div class="app-shell">
-    <?php require __DIR__ . '/sidebar.php'; ?>
-    <main class="app-main">
+<div class="<?= $isAuthPage ? 'auth-shell' : 'app-shell' ?>">
+    <?php if (!$isAuthPage) { require __DIR__ . '/sidebar.php'; } ?>
+    <main class="<?= $isAuthPage ? 'auth-main' : 'app-main' ?>">
+        <?php if (!$isAuthPage): ?>
         <div class="topbar d-flex align-items-center justify-content-between">
             <div>
                 <span class="eyebrow">Projeto Paula</span>
@@ -26,3 +29,4 @@ $pageTitle = $pageTitle ?? 'Projeto Paula';
                 <i class="bi bi-lightning-charge"></i> Rodar busca agora
             </button>
         </div>
+        <?php endif; ?>

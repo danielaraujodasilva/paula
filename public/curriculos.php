@@ -2,24 +2,28 @@
 $pageTitle = 'Curriculos';
 require_once __DIR__ . '/../includes/header.php';
 
+$userId = current_user_id();
 if (isset($_GET['ativar'])) {
     $id = (int)$_GET['ativar'];
     $pdo->beginTransaction();
-    $pdo->exec('UPDATE curriculos SET ativo = 0');
-    $stmt = $pdo->prepare('UPDATE curriculos SET ativo = 1, updated_at = NOW() WHERE id = ?');
-    $stmt->execute([$id]);
+    $stmt = $pdo->prepare('UPDATE curriculos SET ativo = 0 WHERE user_id = ?');
+    $stmt->execute([$userId]);
+    $stmt = $pdo->prepare('UPDATE curriculos SET ativo = 1, updated_at = NOW() WHERE id = ? AND user_id = ?');
+    $stmt->execute([$id, $userId]);
     $pdo->commit();
     header('Location: curriculos.php');
     exit;
 }
 
-$curriculos = $pdo->query('SELECT * FROM curriculos ORDER BY id DESC')->fetchAll();
+$stmt = $pdo->prepare('SELECT * FROM curriculos WHERE user_id = ? ORDER BY id DESC');
+$stmt->execute([$userId]);
+$curriculos = $stmt->fetchAll();
 ?>
 <div class="row g-4">
     <div class="col-lg-5">
         <div class="card"><div class="card-body">
             <h2 class="h5 mb-3">Enviar curriculo</h2>
-            <form id="uploadResumeForm" action="../api/upload_curriculo.php" method="post" enctype="multipart/form-data">
+            <form id="uploadResumeForm" action="<?= url('api/upload_curriculo.php') ?>" method="post" enctype="multipart/form-data">
                 <input class="form-control mb-3" type="file" name="curriculo" accept=".pdf,.docx,.txt" required>
                 <button class="btn btn-accent w-100" type="submit"><i class="bi bi-upload"></i> Enviar e extrair</button>
             </form>

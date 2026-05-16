@@ -2,25 +2,31 @@
 $pageTitle = 'Vagas';
 require_once __DIR__ . '/../includes/header.php';
 
-$params = [];
-$where = [];
-foreach (['fonte', 'status', 'empresa', 'localizacao'] as $field) {
+$userId = current_user_id();
+$params = [$userId];
+$where = ['user_id = ?'];
+foreach (['titulo', 'fonte', 'status', 'empresa', 'localizacao', 'salario', 'data_publicacao'] as $field) {
     if (!empty($_GET[$field])) { $where[] = "$field LIKE ?"; $params[] = '%' . $_GET[$field] . '%'; }
 }
 if (!empty($_GET['q'])) { $where[] = '(titulo LIKE ? OR empresa LIKE ? OR descricao LIKE ? OR localizacao LIKE ?)'; $params[] = '%' . $_GET['q'] . '%'; $params[] = '%' . $_GET['q'] . '%'; $params[] = '%' . $_GET['q'] . '%'; $params[] = '%' . $_GET['q'] . '%'; }
 if (isset($_GET['nota_min']) && $_GET['nota_min'] !== '') { $where[] = 'nota_compatibilidade >= ?'; $params[] = (int)$_GET['nota_min']; }
+if (isset($_GET['nota_max']) && $_GET['nota_max'] !== '') { $where[] = 'nota_compatibilidade <= ?'; $params[] = (int)$_GET['nota_max']; }
 if (!empty($_GET['remoto'])) { $where[] = "(localizacao LIKE '%remote%' OR localizacao LIKE '%remoto%' OR descricao LIKE '%remote%' OR descricao LIKE '%remoto%')"; }
 $orderMap = [
-    'nota' => 'nota_compatibilidade DESC',
-    'recentes' => 'id DESC',
-    'empresa' => 'empresa ASC',
-    'titulo' => 'titulo ASC',
-    'localizacao' => 'localizacao ASC, empresa ASC',
-    'fonte' => 'fonte ASC',
-    'status' => 'status ASC, nota_compatibilidade DESC',
-    'data' => 'data_publicacao DESC',
+    'nota' => 'nota_compatibilidade',
+    'recentes' => 'id',
+    'empresa' => 'empresa',
+    'titulo' => 'titulo',
+    'localizacao' => 'localizacao',
+    'fonte' => 'fonte',
+    'salario' => 'salario',
+    'status' => 'status',
+    'data' => 'data_publicacao',
 ];
-$order = $orderMap[$_GET['ordem'] ?? 'nota'] ?? 'nota_compatibilidade DESC';
+$sortKey = $_GET['ordem'] ?? 'nota';
+$sortDir = strtolower((string)($_GET['dir'] ?? 'desc')) === 'asc' ? 'ASC' : 'DESC';
+$orderColumn = $orderMap[$sortKey] ?? 'nota_compatibilidade';
+$order = $orderColumn . ' ' . $sortDir . ', id DESC';
 $sql = 'SELECT * FROM vagas' . ($where ? ' WHERE ' . implode(' AND ', $where) : '') . " ORDER BY $order LIMIT 300";
 $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
@@ -31,18 +37,25 @@ function sort_link(string $key, string $label): string
     $params = $_GET;
     $params['ordem'] = $key;
     $active = ($_GET['ordem'] ?? 'nota') === $key;
-    $icon = $active ? ' <i class="bi bi-caret-down-fill"></i>' : '';
+    $dir = strtolower((string)($_GET['dir'] ?? 'desc')) === 'asc' ? 'asc' : 'desc';
+    $params['dir'] = $active && $dir === 'asc' ? 'desc' : 'asc';
+    $icon = $active ? ($dir === 'asc' ? ' <i class="bi bi-caret-up-fill"></i>' : ' <i class="bi bi-caret-down-fill"></i>') : '';
     return '<a class="link-light text-decoration-none" href="?' . http_build_query($params) . '">' . e($label) . $icon . '</a>';
 }
 ?>
 <form class="card mb-4"><div class="card-body row g-3 align-items-end">
     <div class="col-md-3"><label class="form-label">Texto livre</label><input name="q" class="form-control" value="<?= e($_GET['q'] ?? '') ?>"></div>
+    <div class="col-md-2"><label class="form-label">Titulo</label><input name="titulo" class="form-control" value="<?= e($_GET['titulo'] ?? '') ?>"></div>
     <div class="col-md-2"><label class="form-label">Fonte</label><input name="fonte" class="form-control" value="<?= e($_GET['fonte'] ?? '') ?>"></div>
     <div class="col-md-2"><label class="form-label">Status</label><select name="status" class="form-select"><option value="">Todos</option><?php foreach (status_options() as $s): ?><option <?= ($_GET['status'] ?? '') === $s ? 'selected' : '' ?>><?= $s ?></option><?php endforeach; ?></select></div>
     <div class="col-md-2"><label class="form-label">Nota minima</label><input name="nota_min" type="number" class="form-control" value="<?= e($_GET['nota_min'] ?? '') ?>"></div>
+    <div class="col-md-2"><label class="form-label">Nota maxima</label><input name="nota_max" type="number" class="form-control" value="<?= e($_GET['nota_max'] ?? '') ?>"></div>
     <div class="col-md-2"><label class="form-label">Empresa</label><input name="empresa" class="form-control" value="<?= e($_GET['empresa'] ?? '') ?>"></div>
     <div class="col-md-2"><label class="form-label">Localidade</label><input name="localizacao" class="form-control" value="<?= e($_GET['localizacao'] ?? '') ?>" placeholder="Sao Paulo, Remote..."></div>
-    <div class="col-md-2"><label class="form-label">Ordenar</label><select name="ordem" class="form-select"><?php foreach (['nota' => 'Maior nota', 'recentes' => 'Mais recentes', 'localizacao' => 'Localidade', 'empresa' => 'Empresa', 'titulo' => 'Titulo', 'fonte' => 'Fonte', 'status' => 'Status', 'data' => 'Data publicacao'] as $k => $v): ?><option value="<?= $k ?>" <?= ($_GET['ordem'] ?? 'nota') === $k ? 'selected' : '' ?>><?= $v ?></option><?php endforeach; ?></select></div>
+    <div class="col-md-2"><label class="form-label">Salario</label><input name="salario" class="form-control" value="<?= e($_GET['salario'] ?? '') ?>"></div>
+    <div class="col-md-2"><label class="form-label">Data</label><input name="data_publicacao" class="form-control" value="<?= e($_GET['data_publicacao'] ?? '') ?>"></div>
+    <div class="col-md-2"><label class="form-label">Ordenar</label><select name="ordem" class="form-select"><?php foreach (['nota' => 'Nota', 'recentes' => 'Mais recentes', 'localizacao' => 'Localidade', 'empresa' => 'Empresa', 'titulo' => 'Titulo', 'fonte' => 'Fonte', 'salario' => 'Salario', 'status' => 'Status', 'data' => 'Data publicacao'] as $k => $v): ?><option value="<?= $k ?>" <?= ($_GET['ordem'] ?? 'nota') === $k ? 'selected' : '' ?>><?= $v ?></option><?php endforeach; ?></select></div>
+    <div class="col-md-2"><label class="form-label">Direcao</label><select name="dir" class="form-select"><option value="desc" <?= ($_GET['dir'] ?? 'desc') === 'desc' ? 'selected' : '' ?>>Decrescente</option><option value="asc" <?= ($_GET['dir'] ?? '') === 'asc' ? 'selected' : '' ?>>Crescente</option></select></div>
     <div class="col-md-2 form-check ms-2"><input name="remoto" value="1" class="form-check-input" type="checkbox" <?= !empty($_GET['remoto']) ? 'checked' : '' ?>> <label class="form-check-label">Somente remoto</label></div>
     <div class="col-md-2"><button class="btn btn-accent w-100" type="submit"><i class="bi bi-filter"></i> Filtrar</button></div>
     <div class="col-md-2"><a class="btn btn-outline-light w-100" href="vagas.php"><i class="bi bi-x-circle"></i> Limpar</a></div>
@@ -53,7 +66,7 @@ function sort_link(string $key, string $label): string
     <span class="text-muted small"><?= count($vagas) ?> vagas exibidas, limite de 300.</span>
 </div>
 <div class="table-responsive"><table class="table align-middle">
-<thead><tr><th><?= sort_link('nota', 'Nota') ?></th><th><?= sort_link('titulo', 'Titulo') ?></th><th><?= sort_link('empresa', 'Empresa') ?></th><th><?= sort_link('localizacao', 'Local') ?></th><th><?= sort_link('fonte', 'Fonte') ?></th><th>Salario</th><th><?= sort_link('status', 'Status') ?></th><th><?= sort_link('data', 'Data') ?></th><th>Acoes</th></tr></thead>
+<thead><tr><th><?= sort_link('nota', 'Nota') ?></th><th><?= sort_link('titulo', 'Titulo') ?></th><th><?= sort_link('empresa', 'Empresa') ?></th><th><?= sort_link('localizacao', 'Local') ?></th><th><?= sort_link('fonte', 'Fonte') ?></th><th><?= sort_link('salario', 'Salario') ?></th><th><?= sort_link('status', 'Status') ?></th><th><?= sort_link('data', 'Data') ?></th><th>Acoes</th></tr></thead>
 <tbody>
 <?php foreach ($vagas as $vaga): ?>
 <tr>

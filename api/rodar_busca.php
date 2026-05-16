@@ -2,8 +2,9 @@
 declare(strict_types=1);
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/helpers.php';
+require_login_json();
 
-$cmd = 'cd /d ' . escapeshellarg(NODE_SCRIPT_DIR) . ' && ' . escapeshellcmd(NODE_PATH) . ' search-jobs.js 2>&1';
+$cmd = 'cd /d ' . escapeshellarg(NODE_SCRIPT_DIR) . ' && ' . escapeshellcmd(NODE_PATH) . ' search-jobs.js --user=' . current_user_id() . ' 2>&1';
 $output = [];
 $code = 0;
 exec($cmd, $output, $code);

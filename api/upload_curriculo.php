@@ -2,6 +2,8 @@
 declare(strict_types=1);
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/helpers.php';
+require_login_json();
+$userId = current_user_id();
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST' || empty($_FILES['curriculo'])) {
     json_response(['success' => false, 'error' => 'Arquivo nao enviado.'], 400);
@@ -29,13 +31,14 @@ if (!move_uploaded_file($file['tmp_name'], $target)) {
 }
 
 $pdo->beginTransaction();
-$pdo->exec('UPDATE curriculos SET ativo = 0');
-$stmt = $pdo->prepare('INSERT INTO curriculos (nome_arquivo, caminho_arquivo, tipo_arquivo, ativo) VALUES (?, ?, ?, 1)');
-$stmt->execute([$file['name'], $target, $ext]);
+$stmt = $pdo->prepare('UPDATE curriculos SET ativo = 0 WHERE user_id = ?');
+$stmt->execute([$userId]);
+$stmt = $pdo->prepare('INSERT INTO curriculos (user_id, nome_arquivo, caminho_arquivo, tipo_arquivo, ativo) VALUES (?, ?, ?, ?, 1)');
+$stmt->execute([$userId, $file['name'], $target, $ext]);
 $id = (int)$pdo->lastInsertId();
 $pdo->commit();
 
-$cmd = 'cd /d ' . escapeshellarg(NODE_SCRIPT_DIR) . ' && ' . escapeshellcmd(NODE_PATH) . ' extract-resume.js ' . $id . ' 2>&1';
+$cmd = 'cd /d ' . escapeshellarg(NODE_SCRIPT_DIR) . ' && ' . escapeshellcmd(NODE_PATH) . ' extract-resume.js ' . $id . ' ' . $userId . ' 2>&1';
 $output = [];
 $code = 0;
 exec($cmd, $output, $code);

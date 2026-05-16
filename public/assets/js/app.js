@@ -16,12 +16,16 @@ async function postJson(url, payload) {
     return data;
 }
 
+function appUrl(path) {
+    return `${window.PAULA_BASE_URL || ''}${path.replace(/^\/+/, '')}`;
+}
+
 document.addEventListener('click', async (event) => {
     const statusButton = event.target.closest('[data-status-id]');
     if (statusButton) {
         statusButton.disabled = true;
         try {
-            await postJson('../api/atualizar_status_vaga.php', {
+            await postJson(appUrl('api/atualizar_status_vaga.php'), {
                 id: statusButton.dataset.statusId,
                 status: statusButton.dataset.status
             });
@@ -40,7 +44,7 @@ document.getElementById('runSearchBtn')?.addEventListener('click', async (event)
     button.disabled = true;
     button.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Buscando...';
     try {
-        const data = await postJson('../api/rodar_busca.php', {});
+        const data = await postJson(appUrl('api/rodar_busca.php'), {});
         showToast(data.message || 'Busca finalizada.');
         setTimeout(() => window.location.reload(), 900);
     } catch (error) {

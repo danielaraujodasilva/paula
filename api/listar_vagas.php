@@ -2,9 +2,10 @@
 declare(strict_types=1);
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/helpers.php';
+require_login_json();
 
-$where = [];
-$params = [];
+$where = ['user_id = ?'];
+$params = [current_user_id()];
 if (!empty($_GET['q'])) {
     $where[] = '(titulo LIKE ? OR empresa LIKE ? OR descricao LIKE ?)';
     $term = '%' . $_GET['q'] . '%';

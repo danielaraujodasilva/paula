@@ -2,6 +2,8 @@
 declare(strict_types=1);
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/helpers.php';
+require_login_json();
+$userId = current_user_id();
 
 $rawPayload = json_decode(file_get_contents('php://input'), true);
 if (is_array($rawPayload) && isset($rawPayload['perfil_json'])) {
@@ -11,14 +13,14 @@ if (is_array($rawPayload) && isset($rawPayload['perfil_json'])) {
     }
     $id = (int)($rawPayload['curriculo_id'] ?? 0);
     if ($id <= 0) {
-        $active = active_curriculo($pdo);
+        $active = active_curriculo($pdo, $userId);
         $id = (int)($active['id'] ?? 0);
     }
     if ($id <= 0) {
         json_response(['success' => false, 'error' => 'Nenhum curriculo ativo encontrado.'], 400);
     }
-    $stmt = $pdo->prepare('UPDATE curriculos SET perfil_json = ?, updated_at = NOW() WHERE id = ?');
-    $stmt->execute([json_encode($decoded, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT), $id]);
+    $stmt = $pdo->prepare('UPDATE curriculos SET perfil_json = ?, updated_at = NOW() WHERE id = ? AND user_id = ?');
+    $stmt->execute([json_encode($decoded, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT), $id, $userId]);
     json_response(['success' => true]);
 }
 
@@ -51,7 +53,7 @@ if (json_last_error() !== JSON_ERROR_NONE) {
     json_response(['success' => false, 'error' => 'JSON invalido.'], 400);
 }
 
-$stmt = $pdo->prepare('UPDATE curriculos SET perfil_json = ?, updated_at = NOW() WHERE id = ?');
-$stmt->execute([$json, $id]);
+$stmt = $pdo->prepare('UPDATE curriculos SET perfil_json = ?, updated_at = NOW() WHERE id = ? AND user_id = ?');
+$stmt->execute([$json, $id, $userId]);
 header('Location: ../public/perfil.php?id=' . $id);
 exit;

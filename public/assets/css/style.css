@@ -26,6 +26,8 @@ body {
     position: sticky;
     top: 0;
     height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 .brand {
     display: flex;
@@ -106,6 +108,32 @@ body {
 }
 a { color: #7dd3fc; }
 .small-action { min-width: 42px; }
+.sidebar-user {
+    margin-top: auto;
+    padding-top: 18px;
+    border-top: 1px solid var(--line);
+}
+.auth-shell {
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+}
+.auth-main {
+    width: min(100%, 440px);
+}
+.auth-card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 28px;
+}
+.source-row {
+    background: #10131a;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 10px 12px;
+}
 
 @media (max-width: 900px) {
     .app-shell { display: block; }

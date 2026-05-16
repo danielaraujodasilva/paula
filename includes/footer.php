@@ -9,6 +9,7 @@
     </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>window.PAULA_BASE_URL = <?= json_encode(rtrim(BASE_URL, '/') . '/') ?>;</script>
 <script src="<?= url('assets/js/app.js') ?>?v=20260515-localidade-buscas"></script>
 </body>
 </html>

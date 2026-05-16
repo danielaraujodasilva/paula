@@ -2,13 +2,14 @@
 $pageTitle = 'Perfil profissional';
 require_once __DIR__ . '/../includes/header.php';
 
+$userId = current_user_id();
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 if ($id > 0) {
-    $stmt = $pdo->prepare('SELECT * FROM curriculos WHERE id = ?');
-    $stmt->execute([$id]);
+    $stmt = $pdo->prepare('SELECT * FROM curriculos WHERE id = ? AND user_id = ?');
+    $stmt->execute([$id, $userId]);
     $curriculo = $stmt->fetch();
 } else {
-    $curriculo = active_curriculo($pdo);
+    $curriculo = active_curriculo($pdo, $userId);
 }
 $profile = $curriculo && $curriculo['perfil_json'] ? json_decode($curriculo['perfil_json'], true) : [];
 function lines(array $data, string $key): string { return implode("\n", array_map('strval', $data[$key] ?? [])); }
@@ -16,7 +17,7 @@ function lines(array $data, string $key): string { return implode("\n", array_ma
 <?php if (!$curriculo): ?>
     <div class="alert alert-warning">Envie um curriculo primeiro.</div>
 <?php else: ?>
-<form class="card" method="post" action="../api/salvar_perfil.php">
+<form class="card" method="post" action="<?= url('api/salvar_perfil.php') ?>">
     <div class="card-body">
         <input type="hidden" name="curriculo_id" value="<?= (int)$curriculo['id'] ?>">
         <div class="row g-3">

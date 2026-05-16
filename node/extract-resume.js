@@ -67,9 +67,11 @@ async function extractText(filePath, type) {
 
 async function main() {
   const id = Number(process.argv[2]);
+  const userId = Number(process.argv[3] || process.env.PAULA_USER_ID || 0);
   if (!id) throw new Error('Informe curriculo_id.');
+  if (!userId) throw new Error('Informe user_id.');
   const db = pool();
-  const [rows] = await db.execute('SELECT * FROM curriculos WHERE id = ?', [id]);
+  const [rows] = await db.execute('SELECT * FROM curriculos WHERE id = ? AND user_id = ?', [id, userId]);
   const resume = rows[0];
   if (!resume) throw new Error('Curriculo nao encontrado.');
   const text = await extractText(path.resolve(resume.caminho_arquivo), resume.tipo_arquivo);

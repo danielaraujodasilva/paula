@@ -2,39 +2,37 @@
 $pageTitle = 'Configuracoes de busca';
 require_once __DIR__ . '/../includes/header.php';
 
+$userId = current_user_id();
 $fontesDisponiveis = [
     'Remotive' => 'Vagas remotas internacionais, sem chave.',
     'Arbeitnow' => 'Vagas globais/tech, sem chave.',
     'RemoteOK' => 'Vagas remotas, sem chave.',
-    'Adzuna' => 'Opcional, melhor para Brasil quando configurar chave gratis.'
+    'Adzuna' => 'Opcional com chave gratis, melhor para Brasil quando configurada.',
+    'Gupy' => 'Fonte brasileira ampla; usa token publico da Gupy quando configurado.',
+    'Codante' => 'API brasileira gratuita para vagas de tecnologia.',
+    'Himalayas' => 'API publica gratuita de vagas remotas.'
 ];
-
-function fontes_validas(array $fontes, array $fontesDisponiveis): array
-{
-    $fontes = array_values(array_intersect(array_keys($fontesDisponiveis), $fontes));
-    return $fontes ?: ['Remotive', 'Arbeitnow', 'RemoteOK'];
-}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $acao = $_POST['acao'] ?? 'criar';
     $id = (int)($_POST['id'] ?? 0);
 
     if ($acao === 'excluir' && $id > 0) {
-        $stmt = $pdo->prepare('DELETE FROM buscas WHERE id = ?');
-        $stmt->execute([$id]);
+        $stmt = $pdo->prepare('DELETE FROM buscas WHERE id = ? AND user_id = ?');
+        $stmt->execute([$id, $userId]);
         header('Location: configuracoes.php?excluido=1');
         exit;
     }
 
     if ($acao === 'toggle' && $id > 0) {
-        $stmt = $pdo->prepare('UPDATE buscas SET ativa = IF(ativa = 1, 0, 1) WHERE id = ?');
-        $stmt->execute([$id]);
+        $stmt = $pdo->prepare('UPDATE buscas SET ativa = IF(ativa = 1, 0, 1) WHERE id = ? AND user_id = ?');
+        $stmt->execute([$id, $userId]);
         header('Location: configuracoes.php?status=1');
         exit;
     }
 
-    $fontes = fontes_validas($_POST['fontes'] ?? [], $fontesDisponiveis);
-    $active = active_curriculo($pdo);
+    $fontes = array_keys($fontesDisponiveis);
+    $active = active_curriculo($pdo, $userId);
     $payload = [
         $_POST['nome'] ?: 'Busca sem nome',
         $_POST['termos'] ?? '',
@@ -47,14 +45,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     ];
 
     if ($acao === 'editar' && $id > 0) {
-        $stmt = $pdo->prepare('UPDATE buscas SET nome = ?, termos = ?, localizacao = ?, remoto = ?, salario_minimo = ?, palavras_obrigatorias = ?, palavras_proibidas = ?, fontes = ? WHERE id = ?');
-        $stmt->execute([...$payload, $id]);
+        $stmt = $pdo->prepare('UPDATE buscas SET nome = ?, termos = ?, localizacao = ?, remoto = ?, salario_minimo = ?, palavras_obrigatorias = ?, palavras_proibidas = ?, fontes = ? WHERE id = ? AND user_id = ?');
+        $stmt->execute([...$payload, $id, $userId]);
         header('Location: configuracoes.php?editado=1');
         exit;
     }
 
-    $stmt = $pdo->prepare('INSERT INTO buscas (curriculo_id, nome, termos, localizacao, remoto, salario_minimo, palavras_obrigatorias, palavras_proibidas, fontes, ativa) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)');
+    $stmt = $pdo->prepare('INSERT INTO buscas (user_id, curriculo_id, nome, termos, localizacao, remoto, salario_minimo, palavras_obrigatorias, palavras_proibidas, fontes, ativa) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)');
     $stmt->execute([
+        $userId,
         $active['id'] ?? null,
         ...$payload,
     ]);
@@ -65,14 +64,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $editId = (int)($_GET['editar'] ?? 0);
 $editBusca = null;
 if ($editId > 0) {
-    $stmt = $pdo->prepare('SELECT * FROM buscas WHERE id = ?');
-    $stmt->execute([$editId]);
+    $stmt = $pdo->prepare('SELECT * FROM buscas WHERE id = ? AND user_id = ?');
+    $stmt->execute([$editId, $userId]);
     $editBusca = $stmt->fetch() ?: null;
 }
 
-$buscas = $pdo->query('SELECT * FROM buscas ORDER BY ativa DESC, id DESC')->fetchAll();
-$fontesSelecionadas = $editBusca ? json_decode($editBusca['fontes'] ?: '[]', true) : ['Remotive', 'Arbeitnow', 'RemoteOK'];
-if (!is_array($fontesSelecionadas)) { $fontesSelecionadas = ['Remotive', 'Arbeitnow', 'RemoteOK']; }
+$stmt = $pdo->prepare('SELECT * FROM buscas WHERE user_id = ? ORDER BY ativa DESC, id DESC');
+$stmt->execute([$userId]);
+$buscas = $stmt->fetchAll();
 ?>
 <?php if (isset($_GET['salvo'])): ?><div class="alert alert-success">Busca salva.</div><?php endif; ?>
 <?php if (isset($_GET['editado'])): ?><div class="alert alert-success">Busca atualizada.</div><?php endif; ?>
@@ -101,12 +100,9 @@ if (!is_array($fontesSelecionadas)) { $fontesSelecionadas = ['Remotive', 'Arbeit
             <label class="form-label">Palavras obrigatorias</label><textarea name="palavras_obrigatorias" rows="3" class="form-control mb-3" placeholder="Uma por linha. Ex: Figma, Excel, WordPress"><?= e($editBusca['palavras_obrigatorias'] ?? '') ?></textarea>
             <label class="form-label">Palavras proibidas</label><textarea name="palavras_proibidas" rows="3" class="form-control mb-3" placeholder="porta a porta&#10;comissao apenas&#10;vendedor externo"><?= e($editBusca['palavras_proibidas'] ?? '') ?></textarea>
             <div class="mb-3">
-                <label class="form-label d-block">Fontes gratis</label>
+                <label class="form-label d-block">Fontes gratis usadas em todas as buscas</label>
                 <?php foreach ($fontesDisponiveis as $fonte => $descricao): ?>
-                    <label class="form-check mb-2">
-                        <input class="form-check-input" type="checkbox" name="fontes[]" value="<?= e($fonte) ?>" <?= in_array($fonte, $fontesSelecionadas, true) ? 'checked' : '' ?>>
-                        <span class="form-check-label"><strong><?= e($fonte) ?></strong><br><small class="text-muted"><?= e($descricao) ?></small></span>
-                    </label>
+                    <div class="source-row mb-2"><strong><?= e($fonte) ?></strong><br><small class="text-muted"><?= e($descricao) ?></small></div>
                 <?php endforeach; ?>
             </div>
             <button class="btn btn-accent" type="submit"><i class="bi bi-save"></i> <?= $editBusca ? 'Salvar alteracoes' : 'Salvar busca' ?></button>

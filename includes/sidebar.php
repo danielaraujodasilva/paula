@@ -11,4 +11,9 @@
         <a class="nav-link <?= $current === 'configuracoes.php' ? 'active' : '' ?>" href="<?= url('configuracoes.php') ?>"><i class="bi bi-sliders"></i> Buscas</a>
         <a class="nav-link <?= in_array($current, ['vagas.php', 'vaga.php'], true) ? 'active' : '' ?>" href="<?= url('vagas.php') ?>"><i class="bi bi-briefcase"></i> Vagas</a>
     </nav>
+    <div class="sidebar-user">
+        <div class="small text-muted">Logado como</div>
+        <div class="fw-semibold"><?= e(current_user()['nome'] ?? 'Usuario') ?></div>
+        <a class="btn btn-sm btn-outline-light w-100 mt-2" href="<?= url('logout.php') ?>"><i class="bi bi-box-arrow-right"></i> Sair</a>
+    </div>
 </aside>
