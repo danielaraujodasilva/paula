@@ -5,8 +5,11 @@ require_once __DIR__ . '/../includes/header.php';
 $userId = current_user_id();
 $params = [$userId];
 $where = ['user_id = ?'];
-foreach (['titulo', 'fonte', 'status', 'empresa', 'localizacao', 'salario', 'data_publicacao'] as $field) {
+foreach (['titulo'] as $field) {
     if (!empty($_GET[$field])) { $where[] = "$field LIKE ?"; $params[] = '%' . $_GET[$field] . '%'; }
+}
+foreach (['fonte', 'status', 'empresa', 'localizacao', 'salario', 'data_publicacao'] as $field) {
+    if (!empty($_GET[$field])) { $where[] = "$field = ?"; $params[] = $_GET[$field]; }
 }
 if (!empty($_GET['q'])) { $where[] = '(titulo LIKE ? OR empresa LIKE ? OR descricao LIKE ? OR localizacao LIKE ?)'; $params[] = '%' . $_GET['q'] . '%'; $params[] = '%' . $_GET['q'] . '%'; $params[] = '%' . $_GET['q'] . '%'; $params[] = '%' . $_GET['q'] . '%'; }
 if (isset($_GET['nota_min']) && $_GET['nota_min'] !== '') { $where[] = 'nota_compatibilidade >= ?'; $params[] = (int)$_GET['nota_min']; }
@@ -32,6 +35,35 @@ $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
 $vagas = $stmt->fetchAll();
 
+function distinct_options(PDO $pdo, int $userId, string $field): array
+{
+    $allowed = ['fonte', 'status', 'empresa', 'localizacao', 'salario', 'data_publicacao'];
+    if (!in_array($field, $allowed, true)) { return []; }
+    $stmt = $pdo->prepare("SELECT DISTINCT {$field} AS value FROM vagas WHERE user_id = ? AND {$field} IS NOT NULL AND {$field} <> '' ORDER BY {$field} ASC LIMIT 500");
+    $stmt->execute([$userId]);
+    return array_map('strval', array_column($stmt->fetchAll(), 'value'));
+}
+
+function filter_select(string $name, string $label, array $options): void
+{
+    $current = (string)($_GET[$name] ?? '');
+    echo '<div class="col-md-2"><label class="form-label">' . e($label) . '</label><select name="' . e($name) . '" class="form-select">';
+    echo '<option value="">Todos</option>';
+    foreach ($options as $option) {
+        echo '<option value="' . e($option) . '"' . ($current === $option ? ' selected' : '') . '>' . e($option) . '</option>';
+    }
+    echo '</select></div>';
+}
+
+$opcoes = [
+    'fonte' => distinct_options($pdo, $userId, 'fonte'),
+    'status' => distinct_options($pdo, $userId, 'status') ?: status_options(),
+    'empresa' => distinct_options($pdo, $userId, 'empresa'),
+    'localizacao' => distinct_options($pdo, $userId, 'localizacao'),
+    'salario' => distinct_options($pdo, $userId, 'salario'),
+    'data_publicacao' => distinct_options($pdo, $userId, 'data_publicacao'),
+];
+
 function sort_link(string $key, string $label): string
 {
     $params = $_GET;
@@ -46,14 +78,14 @@ function sort_link(string $key, string $label): string
 <form class="card mb-4"><div class="card-body row g-3 align-items-end">
     <div class="col-md-3"><label class="form-label">Texto livre</label><input name="q" class="form-control" value="<?= e($_GET['q'] ?? '') ?>"></div>
     <div class="col-md-2"><label class="form-label">Titulo</label><input name="titulo" class="form-control" value="<?= e($_GET['titulo'] ?? '') ?>"></div>
-    <div class="col-md-2"><label class="form-label">Fonte</label><input name="fonte" class="form-control" value="<?= e($_GET['fonte'] ?? '') ?>"></div>
-    <div class="col-md-2"><label class="form-label">Status</label><select name="status" class="form-select"><option value="">Todos</option><?php foreach (status_options() as $s): ?><option <?= ($_GET['status'] ?? '') === $s ? 'selected' : '' ?>><?= $s ?></option><?php endforeach; ?></select></div>
+    <?php filter_select('fonte', 'Fonte', $opcoes['fonte']); ?>
+    <?php filter_select('status', 'Status', $opcoes['status']); ?>
     <div class="col-md-2"><label class="form-label">Nota minima</label><input name="nota_min" type="number" class="form-control" value="<?= e($_GET['nota_min'] ?? '') ?>"></div>
     <div class="col-md-2"><label class="form-label">Nota maxima</label><input name="nota_max" type="number" class="form-control" value="<?= e($_GET['nota_max'] ?? '') ?>"></div>
-    <div class="col-md-2"><label class="form-label">Empresa</label><input name="empresa" class="form-control" value="<?= e($_GET['empresa'] ?? '') ?>"></div>
-    <div class="col-md-2"><label class="form-label">Localidade</label><input name="localizacao" class="form-control" value="<?= e($_GET['localizacao'] ?? '') ?>" placeholder="Sao Paulo, Remote..."></div>
-    <div class="col-md-2"><label class="form-label">Salario</label><input name="salario" class="form-control" value="<?= e($_GET['salario'] ?? '') ?>"></div>
-    <div class="col-md-2"><label class="form-label">Data</label><input name="data_publicacao" class="form-control" value="<?= e($_GET['data_publicacao'] ?? '') ?>"></div>
+    <?php filter_select('empresa', 'Empresa', $opcoes['empresa']); ?>
+    <?php filter_select('localizacao', 'Localidade', $opcoes['localizacao']); ?>
+    <?php filter_select('salario', 'Salario', $opcoes['salario']); ?>
+    <?php filter_select('data_publicacao', 'Data', $opcoes['data_publicacao']); ?>
     <div class="col-md-2"><label class="form-label">Ordenar</label><select name="ordem" class="form-select"><?php foreach (['nota' => 'Nota', 'recentes' => 'Mais recentes', 'localizacao' => 'Localidade', 'empresa' => 'Empresa', 'titulo' => 'Titulo', 'fonte' => 'Fonte', 'salario' => 'Salario', 'status' => 'Status', 'data' => 'Data publicacao'] as $k => $v): ?><option value="<?= $k ?>" <?= ($_GET['ordem'] ?? 'nota') === $k ? 'selected' : '' ?>><?= $v ?></option><?php endforeach; ?></select></div>
     <div class="col-md-2"><label class="form-label">Direcao</label><select name="dir" class="form-select"><option value="desc" <?= ($_GET['dir'] ?? 'desc') === 'desc' ? 'selected' : '' ?>>Decrescente</option><option value="asc" <?= ($_GET['dir'] ?? '') === 'asc' ? 'selected' : '' ?>>Crescente</option></select></div>
     <div class="col-md-2 form-check ms-2"><input name="remoto" value="1" class="form-check-input" type="checkbox" <?= !empty($_GET['remoto']) ? 'checked' : '' ?>> <label class="form-check-label">Somente remoto</label></div>
