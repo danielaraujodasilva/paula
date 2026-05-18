@@ -10,6 +10,10 @@
         <a class="nav-link <?= $current === 'perfil.php' ? 'active' : '' ?>" href="<?= url('perfil.php') ?>"><i class="bi bi-person-vcard"></i> Perfil</a>
         <a class="nav-link <?= $current === 'configuracoes.php' ? 'active' : '' ?>" href="<?= url('configuracoes.php') ?>"><i class="bi bi-sliders"></i> Buscas</a>
         <a class="nav-link <?= in_array($current, ['vagas.php', 'vaga.php'], true) ? 'active' : '' ?>" href="<?= url('vagas.php') ?>"><i class="bi bi-briefcase"></i> Vagas</a>
+        <a class="nav-link <?= $current === 'apoie.php' ? 'active' : '' ?>" href="<?= url('apoie.php') ?>"><i class="bi bi-heart"></i> Apoie</a>
+        <?php if (is_admin_user()): ?>
+        <a class="nav-link <?= $current === 'monetizacao.php' ? 'active' : '' ?>" href="<?= url('monetizacao.php') ?>"><i class="bi bi-cash-coin"></i> Monetizacao</a>
+        <?php endif; ?>
     </nav>
     <div class="sidebar-user">
         <div class="small text-muted">Logado como</div>

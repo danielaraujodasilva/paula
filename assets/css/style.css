@@ -380,6 +380,66 @@ textarea {
     gap: 12px;
 }
 
+.monetization-block {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    min-height: 72px;
+    margin-bottom: 24px;
+    padding: 14px 16px;
+    background: rgba(16, 20, 28, .74);
+    border: 1px dashed rgba(154, 166, 183, .32);
+    border-radius: 8px;
+}
+
+.ad-label {
+    color: var(--muted);
+    font-size: .72rem;
+    font-weight: 800;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+}
+
+.support-code {
+    padding: 8px 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #10141c;
+    color: #bbf7d0;
+    overflow-wrap: anywhere;
+}
+
+.legal-card {
+    width: min(100%, 720px);
+}
+
+.public-footer {
+    position: fixed;
+    left: 50%;
+    bottom: 14px;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 12px;
+    padding: 8px 12px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: rgba(15, 17, 21, .88);
+    backdrop-filter: blur(12px);
+    z-index: 1020;
+    font-size: .86rem;
+}
+
+.public-footer a {
+    color: var(--muted);
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.public-footer a:hover {
+    color: var(--text);
+}
+
 @media (min-width: 920px) {
     .app-shell {
         display: flex;
@@ -452,5 +512,15 @@ textarea {
 
     .start-button {
         width: 100%;
+    }
+
+    .monetization-block {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .public-footer {
+        max-width: calc(100vw - 24px);
+        overflow-x: auto;
     }
 }

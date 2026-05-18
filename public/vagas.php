@@ -75,6 +75,8 @@ function sort_link(string $key, string $label): string
     return '<a class="link-light text-decoration-none" href="?' . http_build_query($params) . '">' . e($label) . $icon . '</a>';
 }
 ?>
+<?php render_monetization_block('vagas'); ?>
+
 <form class="card mb-4"><div class="card-body row g-3 align-items-end">
     <div class="col-md-3"><label class="form-label">Texto livre</label><input name="q" class="form-control" value="<?= e($_GET['q'] ?? '') ?>"></div>
     <div class="col-md-2"><label class="form-label">Titulo</label><input name="titulo" class="form-control" value="<?= e($_GET['titulo'] ?? '') ?>"></div>

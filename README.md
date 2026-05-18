@@ -104,6 +104,24 @@ Por serem experimentais, elas ficam desligadas por padrao. Se falharem, a busca 
 https://danieltatuador.com/paula/
 ```
 
+## Monetizacao opcional
+
+O projeto ja vem preparado para analytics, anuncios e apoio voluntario. Copie `config/local.example.php` para `config/local.php` no servidor e preencha apenas o que quiser ativar:
+
+```php
+define('SITE_CONTACT_EMAIL', 'contato@seudominio.com');
+define('SITE_PUBLIC_URL', 'https://seudominio.com/paula');
+define('GOOGLE_ANALYTICS_ID', 'G-XXXXXXXXXX');
+define('GOOGLE_ADSENSE_CLIENT', 'ca-pub-XXXXXXXXXXXXXXXX');
+define('GOOGLE_ADSENSE_SLOT_MAIN', '1234567890');
+define('DONATION_URL', 'https://github.com/sponsors/seuusuario');
+define('DONATION_PIX_KEY', 'sua-chave-pix');
+```
+
+Se `GOOGLE_ADSENSE_CLIENT` e `GOOGLE_ADSENSE_SLOT_MAIN` estiverem vazios, nenhum anuncio e carregado. Se `DONATION_URL` ou `DONATION_PIX_KEY` estiverem preenchidos, o sistema mostra um bloco discreto de apoio. As paginas publicas `privacidade.php`, `contato.php` e `apoie.php` ajudam na aprovacao e transparencia.
+
+A tela interna `monetizacao.php` so aparece para o e-mail definido em `ADMIN_EMAIL`. O diretorio `config/` tambem possui bloqueio por `.htaccess`, e os arquivos `config.php` e `database.php` recusam acesso direto pelo navegador.
+
 ## Fluxo de uso
 
 1. Acesse `Curriculos` e envie um PDF, DOCX ou TXT.

@@ -1,5 +1,13 @@
     </main>
 </div>
+<?php if (is_public_page()): ?>
+<nav class="public-footer" aria-label="Links institucionais">
+    <a href="<?= url('login.php') ?>">Entrar</a>
+    <a href="<?= url('apoie.php') ?>">Apoie</a>
+    <a href="<?= url('privacidade.php') ?>">Privacidade</a>
+    <a href="<?= url('contato.php') ?>">Contato</a>
+</nav>
+<?php endif; ?>
 <div class="position-fixed bottom-0 start-0 m-2 px-2 py-1 rounded bg-dark border border-secondary text-secondary small" style="z-index: 1030; opacity: .8">
     Paula build: <strong>2026-05-15-localidade-buscas</strong>
 </div>

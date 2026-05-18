@@ -77,6 +77,8 @@ $onboardingStep = $curriculoAtivo ? ($stats['vagas'] > 0 ? 3 : 2) : 1;
     </div>
 </section>
 
+<?php render_monetization_block('dashboard'); ?>
+
 <div class="row g-3 mb-4">
     <div class="col-md-3"><div class="card stat-card"><div class="card-body"><div class="text-muted">Curriculos</div><div class="stat-value"><?= $stats['curriculos'] ?></div></div></div></div>
     <div class="col-md-3"><div class="card stat-card"><div class="card-body"><div class="text-muted">Vagas</div><div class="stat-value"><?= $stats['vagas'] ?></div></div></div></div>

@@ -1,6 +1,11 @@
 <?php
 declare(strict_types=1);
 
+if (realpath((string)($_SERVER['SCRIPT_FILENAME'] ?? '')) === __FILE__) {
+    http_response_code(404);
+    exit;
+}
+
 require_once __DIR__ . '/config.php';
 
 try {

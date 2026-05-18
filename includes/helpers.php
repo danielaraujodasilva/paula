@@ -38,9 +38,14 @@ function is_auth_page(): bool
     return in_array(basename($_SERVER['SCRIPT_NAME']), ['login.php', 'register.php'], true);
 }
 
+function is_public_page(): bool
+{
+    return in_array(basename($_SERVER['SCRIPT_NAME']), ['login.php', 'register.php', 'privacidade.php', 'contato.php', 'apoie.php'], true);
+}
+
 function require_login(): void
 {
-    if (current_user_id() > 0 || is_auth_page()) {
+    if (current_user_id() > 0 || is_public_page()) {
         return;
     }
     header('Location: ' . url('login.php'));
@@ -51,6 +56,21 @@ function require_login_json(): void
 {
     if (current_user_id() <= 0) {
         json_response(['success' => false, 'error' => 'Login necessario.'], 401);
+    }
+}
+
+function is_admin_user(): bool
+{
+    $email = strtolower((string)(current_user()['email'] ?? ''));
+    return $email !== '' && feature_enabled('ADMIN_EMAIL') && $email === strtolower((string)ADMIN_EMAIL);
+}
+
+function require_admin(): void
+{
+    require_login();
+    if (!is_admin_user()) {
+        http_response_code(403);
+        exit('Acesso restrito ao administrador.');
     }
 }
 
@@ -97,4 +117,32 @@ function app_log(PDO $pdo, string $tipo, string $mensagem): void
 {
     $stmt = $pdo->prepare('INSERT INTO logs_execucao (user_id, tipo, mensagem) VALUES (?, ?, ?)');
     $stmt->execute([current_user_id() ?: null, $tipo, $mensagem]);
+}
+
+function feature_enabled(string $constant): bool
+{
+    return defined($constant) && trim((string)constant($constant)) !== '';
+}
+
+function render_monetization_block(string $context = 'principal'): void
+{
+    $hasAds = feature_enabled('GOOGLE_ADSENSE_CLIENT') && feature_enabled('GOOGLE_ADSENSE_SLOT_MAIN');
+    $hasSupport = feature_enabled('DONATION_URL') || feature_enabled('DONATION_PIX_KEY');
+    if (!$hasAds && !$hasSupport) {
+        return;
+    }
+    echo '<aside class="monetization-block" aria-label="Apoio ao projeto">';
+    if ($hasAds) {
+        echo '<span class="ad-label">Publicidade</span>';
+        echo '<ins class="adsbygoogle" style="display:block" data-ad-client="' . e(GOOGLE_ADSENSE_CLIENT) . '" data-ad-slot="' . e(GOOGLE_ADSENSE_SLOT_MAIN) . '" data-ad-format="auto" data-full-width-responsive="true"></ins>';
+        echo '<script>(adsbygoogle = window.adsbygoogle || []).push({});</script>';
+    } elseif ($hasSupport) {
+        echo '<div><span class="eyebrow">Projeto gratuito</span><p class="mb-0">A Paula segue gratuita. Contribuicoes ajudam a manter hospedagem, melhorias e novas fontes de vagas.</p></div>';
+        if (feature_enabled('DONATION_URL')) {
+            echo '<a class="btn btn-sm btn-accent" target="_blank" rel="noopener" href="' . e(DONATION_URL) . '"><i class="bi bi-heart"></i> Apoiar</a>';
+        } elseif (feature_enabled('DONATION_PIX_KEY')) {
+            echo '<code class="support-code">' . e(DONATION_PIX_KEY) . '</code>';
+        }
+    }
+    echo '</aside>';
 }

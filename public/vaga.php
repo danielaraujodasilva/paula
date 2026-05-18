@@ -14,6 +14,7 @@ $message = 'Ola, tudo bem? Me interessei pela vaga de ' . ($vaga['titulo'] ?? ''
 <?php if (!$vaga): ?>
     <div class="alert alert-warning">Vaga nao encontrada.</div>
 <?php else: ?>
+<?php render_monetization_block('vaga'); ?>
 <div class="row g-4">
     <div class="col-lg-8">
         <div class="card"><div class="card-body">
