@@ -1,7 +1,7 @@
 <?php
 $pageTitle = 'Privacidade';
 require_once __DIR__ . '/../includes/header.php';
-$contact = SITE_CONTACT_EMAIL ?: 'contato do responsavel pelo site';
+$contact = app_setting('SITE_CONTACT_EMAIL') ?: 'contato do responsavel pelo site';
 ?>
 <div class="auth-card legal-card">
     <span class="brand-mark">P</span>

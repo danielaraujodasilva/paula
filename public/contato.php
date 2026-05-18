@@ -1,7 +1,7 @@
 <?php
 $pageTitle = 'Contato';
 require_once __DIR__ . '/../includes/header.php';
-$email = SITE_CONTACT_EMAIL;
+$email = app_setting('SITE_CONTACT_EMAIL');
 ?>
 <div class="auth-card legal-card">
     <span class="brand-mark">P</span>

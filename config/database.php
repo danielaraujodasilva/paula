@@ -25,6 +25,13 @@ try {
       updated_at TIMESTAMP NULL DEFAULT NULL
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 
+    $pdo->exec("CREATE TABLE IF NOT EXISTS app_settings (
+      setting_key VARCHAR(80) PRIMARY KEY,
+      setting_value LONGTEXT NULL,
+      updated_by INT NULL,
+      updated_at TIMESTAMP NULL DEFAULT NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
     foreach (['curriculos', 'buscas', 'vagas', 'logs_execucao'] as $table) {
         $stmt = $pdo->prepare("SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = 'user_id'");
         $stmt->execute([$table]);

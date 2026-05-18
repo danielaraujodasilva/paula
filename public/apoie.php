@@ -9,13 +9,13 @@ $hasPix = feature_enabled('DONATION_PIX_KEY');
     <h1 class="h4 mt-3">Apoie o Projeto Paula</h1>
     <p class="text-muted">A Paula e gratuita. Apoios ajudam a pagar hospedagem, manutencao e novas fontes de vagas.</p>
 
-    <?php if ($hasDonationUrl): ?>
-        <a class="btn btn-accent w-100 mb-3" target="_blank" rel="noopener" href="<?= e(DONATION_URL) ?>"><i class="bi bi-heart"></i> Apoiar o projeto</a>
+<?php if ($hasDonationUrl): ?>
+        <a class="btn btn-accent w-100 mb-3" target="_blank" rel="noopener" href="<?= e(app_setting('DONATION_URL')) ?>"><i class="bi bi-heart"></i> Apoiar o projeto</a>
     <?php endif; ?>
 
     <?php if ($hasPix): ?>
         <label class="form-label">Chave Pix</label>
-        <code class="support-code d-block mb-3"><?= e(DONATION_PIX_KEY) ?></code>
+        <code class="support-code d-block mb-3"><?= e(app_setting('DONATION_PIX_KEY')) ?></code>
     <?php endif; ?>
 
     <?php if (!$hasDonationUrl && !$hasPix): ?>

@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/helpers.php';
-$pageTitle = $pageTitle ?? SITE_NAME;
+$pageTitle = $pageTitle ?? app_setting('SITE_NAME', SITE_NAME);
 require_login();
 $isAuthPage = is_auth_page();
 $isPublicPage = is_public_page();
@@ -17,16 +17,16 @@ $isPublicPage = is_public_page();
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <link href="<?= url('assets/css/style.css') ?>" rel="stylesheet">
     <?php if (feature_enabled('GOOGLE_ANALYTICS_ID')): ?>
-    <script async src="https://www.googletagmanager.com/gtag/js?id=<?= e(GOOGLE_ANALYTICS_ID) ?>"></script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=<?= e(app_setting('GOOGLE_ANALYTICS_ID')) ?>"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
         function gtag(){dataLayer.push(arguments);}
         gtag('js', new Date());
-        gtag('config', <?= json_encode(GOOGLE_ANALYTICS_ID) ?>);
+        gtag('config', <?= json_encode(app_setting('GOOGLE_ANALYTICS_ID')) ?>);
     </script>
     <?php endif; ?>
     <?php if (feature_enabled('GOOGLE_ADSENSE_CLIENT')): ?>
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=<?= e(GOOGLE_ADSENSE_CLIENT) ?>" crossorigin="anonymous"></script>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=<?= e(app_setting('GOOGLE_ADSENSE_CLIENT')) ?>" crossorigin="anonymous"></script>
     <?php endif; ?>
 </head>
 <body>

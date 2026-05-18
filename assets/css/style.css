@@ -440,6 +440,34 @@ textarea {
     color: var(--text);
 }
 
+.settings-card .card-body {
+    padding: 0;
+}
+
+.settings-grid {
+    display: grid;
+}
+
+.setting-row {
+    display: grid;
+    grid-template-columns: minmax(180px, .8fr) minmax(0, 1.2fr);
+    gap: 18px;
+    padding: 18px;
+    border-bottom: 1px solid var(--line);
+}
+
+.setting-row:last-child {
+    border-bottom: 0;
+}
+
+.setting-status {
+    min-height: 26px;
+}
+
+.settings-card .d-flex {
+    padding: 0 18px 18px;
+}
+
 @media (min-width: 920px) {
     .app-shell {
         display: flex;
@@ -522,5 +550,10 @@ textarea {
     .public-footer {
         max-width: calc(100vw - 24px);
         overflow-x: auto;
+    }
+
+    .setting-row {
+        grid-template-columns: 1fr;
+        gap: 10px;
     }
 }
