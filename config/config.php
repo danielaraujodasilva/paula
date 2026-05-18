@@ -34,7 +34,7 @@ defined('SITE_CONTACT_EMAIL') || define('SITE_CONTACT_EMAIL', '');
 defined('SITE_PUBLIC_URL') || define('SITE_PUBLIC_URL', '');
 
 defined('GOOGLE_ANALYTICS_ID') || define('GOOGLE_ANALYTICS_ID', '');
-defined('GOOGLE_ADSENSE_CLIENT') || define('GOOGLE_ADSENSE_CLIENT', '');
+defined('GOOGLE_ADSENSE_CLIENT') || define('GOOGLE_ADSENSE_CLIENT', 'ca-pub-9113343087591042');
 defined('GOOGLE_ADSENSE_SLOT_MAIN') || define('GOOGLE_ADSENSE_SLOT_MAIN', '');
 
 defined('DONATION_URL') || define('DONATION_URL', '');
