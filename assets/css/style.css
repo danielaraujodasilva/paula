@@ -215,8 +215,9 @@ textarea {
 }
 
 .score-pill {
-    width: 52px;
+    min-width: 58px;
     height: 36px;
+    padding: 0 8px;
     display: inline-grid;
     place-items: center;
     border-radius: 8px;

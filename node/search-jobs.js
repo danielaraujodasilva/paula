@@ -232,7 +232,7 @@ async function main() {
   }
 
   const { spawnSync } = require('child_process');
-  const score = spawnSync(process.execPath, ['score-jobs.js', `--user=${USER_ID}`], { cwd: __dirname, stdio: 'inherit' });
+  const score = spawnSync(process.execPath, ['score-jobs.js', `--user=${USER_ID}`, '--all'], { cwd: __dirname, stdio: 'inherit' });
   if (score.status !== 0) process.exit(score.status);
 }
 

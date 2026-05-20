@@ -12,7 +12,14 @@ function containsAny(text, terms) {
 
 function matchedTerms(text, terms) {
   const normalized = normalizeText(text);
-  return asArray(terms).filter((term) => normalized.includes(normalizeText(term)));
+  return asArray(terms).filter((term) => {
+    const normalizedTerm = normalizeText(term);
+    if (!normalizedTerm) return false;
+    if (normalizedTerm.length <= 2) {
+      return new RegExp(`(^|\\s)${normalizedTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\s|$)`).test(normalized);
+    }
+    return normalized.includes(normalizedTerm);
+  });
 }
 
 function countMatches(text, terms) {
@@ -31,23 +38,32 @@ function tooSenior(jobText, profile) {
 }
 
 function scoreJob(job, profile) {
-  const text = `${job.titulo || ''} ${job.localizacao || ''} ${stripHtml(job.descricao || '')}`;
+  const description = stripHtml(job.descricao || '');
+  const text = `${job.titulo || ''} ${job.empresa || ''} ${job.localizacao || ''} ${description}`;
   const title = job.titulo || '';
   const positives = [];
   const alerts = [];
   let score = 0;
 
-  const targetMatches = matchedTerms(title, [...asArray(profile.cargo_alvo), ...asArray(profile.palavras_chave)]);
-  if (targetMatches.length) {
-    score += 30;
-    positives.push(`titulo combina com: ${targetMatches.join(', ')}`);
+  const targetTerms = [...asArray(profile.cargo_alvo), ...asArray(profile.palavras_chave)];
+  const targetTitleMatches = matchedTerms(title, targetTerms);
+  const targetTextMatches = matchedTerms(text, targetTerms);
+  if (targetTitleMatches.length) {
+    score += 26;
+    positives.push(`titulo combina com: ${targetTitleMatches.join(', ')}`);
+  } else if (targetTextMatches.length) {
+    score += 14;
+    positives.push(`descricao combina com: ${targetTextMatches.slice(0, 5).join(', ')}`);
   }
 
   const skills = matchedTerms(text, profile.habilidades);
   if (skills.length) {
-    const add = Math.min(25, Math.round((skills.length / Math.max(asArray(profile.habilidades).length, 1)) * 25));
+    const add = Math.min(30, Math.round((skills.length / Math.max(asArray(profile.habilidades).length, 1)) * 30));
     score += add;
     positives.push(`habilidades encontradas: ${skills.join(', ')}`);
+  } else {
+    score -= 8;
+    alerts.push('nenhuma habilidade do curriculo apareceu claramente');
   }
 
   const local = normalizeText(`${job.localizacao || ''} ${job.descricao || ''}`);
@@ -58,19 +74,25 @@ function scoreJob(job, profile) {
   }
 
   if (profile.senioridade && containsAny(text, [profile.senioridade])) {
-    score += 10;
+    score += 12;
     positives.push(`senioridade citada: ${profile.senioridade}`);
   }
 
   const tools = matchedTerms(text, profile.ferramentas);
   if (tools.length) {
-    score += 10;
+    score += Math.min(12, 4 + tools.length * 3);
     positives.push(`ferramentas encontradas: ${tools.join(', ')}`);
+  }
+
+  const experiences = matchedTerms(text, asArray(profile.experiencias).map((item) => String(item).slice(0, 80)));
+  if (experiences.length) {
+    score += 8;
+    positives.push('experiencia descrita no curriculo aparece na vaga');
   }
 
   const forbidden = matchedTerms(text, profile.palavras_proibidas);
   if (!forbidden.length) {
-    score += 10;
+    score += 6;
   } else {
     score -= 30;
     alerts.push(`palavras proibidas: ${forbidden.join(', ')}`);
@@ -93,8 +115,13 @@ function scoreJob(job, profile) {
   }
 
   if (stripHtml(job.descricao || '').length < 180) {
-    score -= 10;
+    score -= 12;
     alerts.push('descricao curta ou pouco informativa');
+  }
+
+  if (!targetTitleMatches.length && !skills.length && !tools.length) {
+    score -= 18;
+    alerts.push('pouca relacao objetiva com o curriculo');
   }
 
   score = Math.max(0, Math.min(100, score));

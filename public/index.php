@@ -94,11 +94,11 @@ $onboardingStep = $curriculoAtivo ? ($stats['vagas'] > 0 ? 3 : 2) : 1;
         </div>
         <div class="table-responsive">
             <table class="table align-middle">
-                <thead><tr><th>Nota</th><th>Titulo</th><th>Empresa</th><th>Fonte</th><th>Status</th><th></th></tr></thead>
+                <thead><tr><th>Nota (%)</th><th>Titulo</th><th>Empresa</th><th>Fonte</th><th>Status</th><th></th></tr></thead>
                 <tbody>
                 <?php foreach ($ultimas as $vaga): ?>
                     <tr>
-                        <td><span class="score-pill"><?= (int)$vaga['nota_compatibilidade'] ?></span></td>
+                        <td><span class="score-pill"><?= (int)$vaga['nota_compatibilidade'] ?>%</span></td>
                         <td><?= e($vaga['titulo']) ?></td>
                         <td><?= e($vaga['empresa']) ?></td>
                         <td><?= e($vaga['fonte']) ?></td>

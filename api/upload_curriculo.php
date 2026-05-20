@@ -48,4 +48,14 @@ if ($code !== 0) {
     json_response(['success' => false, 'error' => 'Arquivo salvo, mas a extracao falhou. Rode npm install em node/.', 'details' => $output], 500);
 }
 
-json_response(['success' => true, 'message' => 'Curriculo enviado e perfil inicial gerado.', 'curriculo_id' => $id]);
+$scoreCmd = 'cd /d ' . escapeshellarg(NODE_SCRIPT_DIR) . ' && ' . escapeshellcmd(NODE_PATH) . ' score-jobs.js --user=' . $userId . ' --all 2>&1';
+$scoreOutput = [];
+$scoreCode = 0;
+exec($scoreCmd, $scoreOutput, $scoreCode);
+app_log($pdo, 'score_curriculo', implode("\n", $scoreOutput));
+
+if ($scoreCode !== 0) {
+    json_response(['success' => true, 'message' => 'Curriculo enviado, mas nao foi possivel recalcular as vagas agora.', 'curriculo_id' => $id, 'score_warning' => $scoreOutput]);
+}
+
+json_response(['success' => true, 'message' => 'Curriculo enviado, perfil gerado e vagas recalculadas.', 'curriculo_id' => $id]);

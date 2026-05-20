@@ -5,9 +5,9 @@ const mammoth = require('mammoth');
 const { pool } = require('./lib/db');
 const { normalizeText } = require('./lib/text');
 
-const SKILLS = ['php', 'mysql', 'mariadb', 'javascript', 'node.js', 'node', 'html', 'css', 'bootstrap', 'laravel', 'react', 'vue', 'python', 'java', 'c#', 'sql', 'git', 'docker', 'api', 'rest', 'linux', 'windows', 'excel', 'power bi'];
-const TOOLS = ['xampp', 'git', 'github', 'docker', 'figma', 'jira', 'trello', 'postman', 'vscode', 'visual studio', 'aws', 'azure'];
-const ROLES = ['desenvolvedor php', 'desenvolvedor backend', 'desenvolvedor full stack', 'analista de sistemas', 'analista de suporte', 'devops', 'frontend', 'backend'];
+const SKILLS = ['php', 'mysql', 'mariadb', 'javascript', 'typescript', 'node.js', 'node', 'html', 'css', 'bootstrap', 'laravel', 'react', 'vue', 'angular', 'python', 'java', 'c#', 'sql', 'git', 'docker', 'api', 'rest', 'linux', 'windows', 'excel', 'power bi', 'wordpress', 'shopify', 'seo', 'marketing digital', 'atendimento', 'vendas', 'suporte', 'administrativo', 'financeiro', 'rh', 'departamento pessoal', 'logistica', 'ux', 'ui'];
+const TOOLS = ['xampp', 'git', 'github', 'docker', 'figma', 'jira', 'trello', 'postman', 'vscode', 'visual studio', 'aws', 'azure', 'office', 'google workspace', 'canva', 'photoshop', 'illustrator', 'notion', 'hubspot', 'salesforce'];
+const ROLES = ['desenvolvedor php', 'desenvolvedor backend', 'desenvolvedor full stack', 'analista de sistemas', 'analista de suporte', 'devops', 'frontend', 'backend', 'designer', 'analista de marketing', 'social media', 'assistente administrativo', 'auxiliar administrativo', 'analista financeiro', 'analista de dados', 'product manager', 'gerente de projetos', 'atendente', 'vendedor'];
 const SENIORITIES = ['estagio', 'junior', 'pleno', 'senior', 'especialista'];
 
 function detectList(text, dictionary) {

@@ -20,7 +20,7 @@ $message = 'Ola, tudo bem? Me interessei pela vaga de ' . ($vaga['titulo'] ?? ''
         <div class="card"><div class="card-body">
             <div class="d-flex justify-content-between gap-3 align-items-start mb-3">
                 <div><h2 class="h4"><?= e($vaga['titulo']) ?></h2><div class="text-muted"><?= e($vaga['empresa']) ?> · <?= e($vaga['localizacao']) ?></div></div>
-                <span class="score-pill"><?= (int)$vaga['nota_compatibilidade'] ?></span>
+                <span class="score-pill"><?= (int)$vaga['nota_compatibilidade'] ?>%</span>
             </div>
             <p><span class="badge <?= badge_class($vaga['status']) ?>"><?= e($vaga['status']) ?></span> <span class="badge text-bg-dark border"><?= e($vaga['fonte']) ?></span> <span class="text-muted"><?= e($vaga['salario']) ?></span></p>
             <p><a class="btn btn-accent" target="_blank" rel="noopener" href="<?= e($vaga['url']) ?>"><i class="bi bi-box-arrow-up-right"></i> Abrir vaga original</a></p>
